@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 106. Construct Binary Tree from Inorder and Postorder Traversal
  * Definition for a binary tree node.
@@ -8,7 +11,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-class Solution {
+class LC106 {
     private int[] in, post;
     private Map<Integer, Integer> map = new HashMap<>();
     

@@ -1,6 +1,6 @@
 //往左边走的时候将当前节点的值作为最大值传下去，往右边走的时候将当前节点的值作为最小值传下去 子树的值不能小于最小也不能大于最大
 
-class Solution {
+class LC98 {
     public boolean isValidBST(TreeNode root) {
         return helper(root, null, null); 
     }

@@ -1,4 +1,4 @@
-class Solution {
+class LC437 {
     private int res = 0;
     
     /**

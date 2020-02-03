@@ -7,7 +7,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-class Solution {
+class LC124 {
     private int max = Integer.MIN_VALUE;
     
     public int maxPathSum(TreeNode root) {

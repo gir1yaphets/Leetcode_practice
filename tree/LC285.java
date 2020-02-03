@@ -7,7 +7,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-class Solution {
+class LC285 {
     private TreeNode res, pred;
     
     public TreeNode inorderSuccessor(TreeNode root, TreeNode p) {

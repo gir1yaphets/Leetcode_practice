@@ -1,0 +1,86 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LC127_2",
+            "request": "launch",
+            "mainClass": "LC127_2",
+            "projectName": "project_3bd748ad"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LC148",
+            "request": "launch",
+            "mainClass": "LC148",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LC1197",
+            "request": "launch",
+            "mainClass": "LC1197",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LC92",
+            "request": "launch",
+            "mainClass": "LC92",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LC399",
+            "request": "launch",
+            "mainClass": "LC399",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Solution",
+            "request": "launch",
+            "mainClass": "Solution",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - MergeSortHelper",
+            "request": "launch",
+            "mainClass": "MergeSortHelper",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - QuickSortHelper",
+            "request": "launch",
+            "mainClass": "QuickSortHelper",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - BinarySearchTest",
+            "request": "launch",
+            "mainClass": "BinarySearchTest",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LC79_bfs",
+            "request": "launch",
+            "mainClass": "LC79_bfs",
+            "projectName": "project_408cc18a"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LC33_2",
+            "request": "launch",
+            "mainClass": "LC33_2"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - LC1027",
+            "request": "launch",
+            "mainClass": "LC1027"
+        }
+    ]
+}

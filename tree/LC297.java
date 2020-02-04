@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Definition for a binary tree node.
  * public class TreeNode {
@@ -7,9 +10,9 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-public class Codec {
+public class LC297 {
     public static void main(String[] args) {
-        new Codec().deserialize("1,2,null,null,3,4,null,null,5,null,null");
+        new LC297().deserialize("1,2,null,null,3,4,null,null,5,null,null");
     }
     public class TreeNode {
         int val;

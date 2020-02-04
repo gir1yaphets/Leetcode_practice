@@ -1,3 +1,8 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Definition for a binary tree node.
  * public class TreeNode {
@@ -7,7 +12,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-class Solution {
+class LC508 {
     private int max = 0;
     
     public int[] findFrequentTreeSum(TreeNode root) {

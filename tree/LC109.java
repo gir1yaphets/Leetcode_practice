@@ -2,7 +2,7 @@
  * T: O(nlogn) : 找中点总共需要logn次 每次的时间 n/2 + 2 * n/4 + 4 * n/8...
  * S: O(logn)
  */
-class Solution {
+class LC109 {
     public TreeNode sortedListToBST(ListNode head) {
         return helper(head, null);
     }

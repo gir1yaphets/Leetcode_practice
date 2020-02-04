@@ -1,10 +1,13 @@
+import java.util.ArrayList;
+import java.util.List;
+
 /**
 1.注意树中可能存在负数，所以不能判断当加上下一个节点大于目标的时候就剪枝
 2.回溯条件
   1.当前叶子结点已经满足条件，删除重新走下一个子树
   2.当前节点左右子树已经走完，将该节点删除
 */
-class Solution {
+class LC113 {
     private List<List<Integer>> res = new ArrayList<>();
 
     public List<List<Integer>> pathSum(TreeNode root, int sum) {

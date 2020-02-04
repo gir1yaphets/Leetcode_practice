@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Definition for a binary tree node.
  * public class TreeNode {
@@ -7,7 +10,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-class Solution {
+class LC545 {
     
     /**
      * Correct
@@ -44,10 +47,10 @@ class Solution {
     /**
      * wrong but don't know why
      */
-    private List<Integer> res = new ArrayList<>();
+    // private List<Integer> res = new ArrayList<>();
     private List<Integer> resRight = new ArrayList<>();
     
-    public List<Integer> boundaryOfBinaryTree(TreeNode root) {
+    public List<Integer> boundaryOfBinaryTree_wrong(TreeNode root) {
         if (root == null) return res;
         
         res.add(root.val);

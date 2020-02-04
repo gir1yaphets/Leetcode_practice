@@ -1,4 +1,4 @@
-class Solution {
+class LC250 {
     private int count = 0;
     
     public int countUnivalSubtrees(TreeNode root) {

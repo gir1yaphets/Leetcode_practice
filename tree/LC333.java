@@ -7,7 +7,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-class Solution {
+class LC333 {
     class RangeNode {
         private int max;
         private int min;

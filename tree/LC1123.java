@@ -7,7 +7,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-class Solution {
+class LC1123 {
     private TreeNode lca;
     private int depth = 0;
     

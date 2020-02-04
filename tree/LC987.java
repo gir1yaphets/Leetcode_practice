@@ -1,3 +1,9 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 /**
  * Definition for a binary tree node.
  * public class TreeNode {
@@ -7,7 +13,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
-class Solution {
+class LC987 {
     class NodeCol {
         TreeNode node;
         int col;

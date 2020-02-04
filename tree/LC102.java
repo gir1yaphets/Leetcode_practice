@@ -1,6 +1,11 @@
-class Solution {
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+class LC102 {
     //DFS
-    public List<List<Integer>> levelOrder(TreeNode root) {
+    public List<List<Integer>> levelOrder_dfs(TreeNode root) {
         List<List<Integer>> res = new ArrayList<>();
         helper(root, 0, res);
         return res;
@@ -20,7 +25,7 @@ class Solution {
     }
 
     //BFS
-    public List<List<Integer>> levelOrder(TreeNode root) {
+    public List<List<Integer>> levelOrder_bfs(TreeNode root) {
         List<List<Integer>> res = new ArrayList<>();
         if (root == null) return res;
         

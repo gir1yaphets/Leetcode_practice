@@ -1,4 +1,4 @@
-class Solution {
+class LC63 {
     public int uniquePathsWithObstacles(int[][] ob) {
         if (ob.length == 0 || ob[0].length == 0) return 0;
         int m = ob.length, n = ob[0].length;

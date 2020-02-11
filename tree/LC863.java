@@ -17,6 +17,12 @@ class LC863 {
         return res;
     }
     
+    /**
+     * 将target节点标记为level 0, 然后将其上面的父亲节点的level依次标记为level + 1, 其下面的节点不用标记
+     * @param root
+     * @param target
+     * @return
+     */
     private int find(TreeNode root, TreeNode target) {
         if (root == null) {
             return -1;
@@ -42,6 +48,14 @@ class LC863 {
         return -1;
     }
     
+    /**
+     * 如果该节点存在于map中，则直接取该节点相对于target节点的距离，否则用之前取过的距离+1
+     *      1
+     *    /  \
+     *   2   3
+     * 如果2是target节点 那么1存在于map中 level就是1
+     * 3不在map中，用1的level + 1，所以3距离2的距离就是2
+     */
     private void helper(TreeNode root, int level, int K, List<Integer> res) {
         if (root == null) return;
         if (map.containsKey(root)) {

@@ -1483,6 +1483,82 @@ class LC505 {
 
 
 
+#### Leetcode 269(Alien Dictionary)
+
+```java
+import java.util.*;
+
+class LC269 {
+    public String alienOrder(String[] words) {
+        Map<Character, Set<Character>> g = new HashMap<>();
+        int[] indegree = new int[26];
+        buildGraph(words, g, indegree);
+        return bfs(g, indegree);
+    }
+    
+    private void buildGraph(String[] words, Map<Character, Set<Character>> g, int[] indegree) {
+        //将所有出现过的字母作为graph的一个顶点
+        for (String word : words) {
+            for (char c : word.toCharArray()) {
+                g.putIfAbsent(c, new HashSet<>());
+            }
+        }
+        
+        for (int i = 1; i < words.length; i++) {
+            //相邻两个字符串进行字母比较
+            String first = words[i - 1];
+            String second = words[i];
+            
+            int minLen = Math.min(first.length(), second.length());
+            
+            for (int j = 0; j < minLen; j++) {
+                char out = first.charAt(j);
+                char in = second.charAt(j);
+                if (out != in) {
+                    //Map的key是set 不会重复添加 但是indegree不能加多次
+                    if (!g.get(out).contains(in)) {
+                        g.get(out).add(in);
+                        indegree[in - 'a']++;
+                    }
+                    //只要发现一个不同的就确定了一个关系 后面的则不能再比较了 因为第一个的不同的字符决定了顺序
+                    break;
+                }
+            }
+        }
+    }
+    
+    private String bfs(Map<Character, Set<Character>> g, int[] indegree) {
+        StringBuilder sb = new StringBuilder();
+        Queue<Character> q = new LinkedList<>();
+        
+        for (char c : g.keySet()) {
+            if (indegree[c - 'a'] == 0) {
+                q.offer(c);
+            }
+        }
+        
+        while (!q.isEmpty()) {
+            char out = q.poll();
+            sb.append(out);
+            
+            if (g.get(out) != null && g.get(out).size() > 0) {
+                for (char in : g.get(out)) {
+                    if (--indegree[in - 'a'] == 0) {
+                        q.offer(in);
+                    }
+                }
+            }
+        }
+        
+        return sb.length() == g.size() ? sb.toString() : "";
+    }
+}
+```
+
+
+
+
+
 ### Backtracking
 
 ---
@@ -2072,11 +2148,140 @@ class Solution {
 
 
 
+### Pre sum问题
+
+#### Leetcode 560(Subarray Sum Equals K)
+
+```java
+		/**
+     * 将(j, i) = k拆为两部分 (0, i) = sum和(0, j-1) = sum - k; 
+     * @param nums
+     * @param k
+     * @return
+     */
+    public int subarraySum(int[] nums, int k) {
+        int n = nums.length;
+        int sum = 0, res = 0;
+        Map<Integer, Integer> map = new HashMap<>();
+      
+	      //初始化前缀和为0的个数为1, 为了加入sum == k的情况
+        map.put(0, 1);
+        
+        for (int i = 0; i < n; i++) {
+            sum += nums[i];
+            
+            /**
+             * 0～i的和是sum, 判断i之前有多少个前缀和从(0 ~ j-1)是sum - k
+                那么就存在多少个从j~i的和是k, 这里和位置无关
+                e.g {x, x, x, x, x, x} k = 2
+                       ⬆️    ⬆️ 
+                比如i=5的时候sum=3 (0, 1)和(0, 3)的和为1, 所以前缀和是1的个数就有两个
+                那么到i=5的时候和为2的个数为两个 即从(2, 5)和(4, 5)
+             */
+            if (map.containsKey(sum - k)) {
+                res += map.get(sum - k);
+            }
+            
+            //将当前的和继续作为pre_sum存入map记录个数
+            map.put(sum, map.getOrDefault(sum, 0) + 1);
+        }
+
+        return res;
+    }
+```
+
+
+
+#### Leetcode 523
+
+```java
+
+class LC523 {
+    /**
+     * 如果[0, j]的和是rem [0, i]的和还是rem 并且i-j>1 那么[j,i]的和就是n * k
+     */
+    public boolean checkSubarraySum(int[] nums, int k) {
+        int n = nums.length;
+        Map<Integer, Integer> preSum = new HashMap<>();
+        preSum.put(0, -1);
+        
+        int sum = 0;
+        for (int i = 0; i < n; i++) {
+            sum += nums[i];
+            
+            if (k != 0) {
+                sum %= k;
+            }
+            
+            if (preSum.containsKey(sum)) {
+              	//如果 >0 反例 [0] k = 0,因为初始preSum.put(0, -1)
+                if (i - preSum.get(sum) > 1) {
+                    return true;
+                }
+            } else {
+                preSum.put(sum, i);
+            }
+
+            //Wrong!!! [2, 0] k = 0
+            //preSum.put(sum, i);
+        }
+        
+        return false;
+    }
+}
+```
+
+
+
 
 
 ### Union Find
 
 ---
+
+#### Leetcode 1135(Connecting Cities With Minimum Cost)
+
+```java
+class Solution {
+    public int minimumCost(int N, int[][] connections) {
+        int[] root = new int[N];
+        int count = N;
+        int cost = 0;
+        for (int i = 0; i < N; i++) {
+            root[i] = i;
+        }
+        
+        Arrays.sort(connections, (o1, o2) -> o1[2] - o2[2]);
+        for (int[] conn : connections) {
+            int rootx = find(root, conn[0] - 1);
+            int rooty = find(root, conn[1] - 1);
+            
+            if (rootx != rooty) {
+                root[rooty] = rootx;
+                count -= 1;
+                cost += conn[2];
+            }
+            
+            if (count == 1) {
+                break;
+            }
+            
+        }
+        
+        return count == 1 ? cost : -1;
+    }
+    
+    private int find(int[] root, int x) {
+        if (root[x] != x) {
+            root[x] = find(root, root[x]);
+        }
+        
+        return root[x];
+    }
+}
+```
+
+
 
 
 
@@ -2241,6 +2446,62 @@ class Solution {
 
 
 
+#### Leetcode 76(Minimum Window Substring)
+
+```java
+class LC76 {
+    /**
+     * 1. 先移动右指针让该窗口包含所有t中的字符串，每找到一个右边的字符，count--
+     * 2. 当count == 0时说明t中的所有字符都找到了，开始移动左指针直到从窗口中移除掉一个t中的字符，然后再继续移动右指针寻找新的窗口
+     * 3. 更新minL和minR的值找到最小窗口
+     */
+    public String minWindow(String s, String t) {
+        if (s == null || t == null || s.length() == 0 || t.length() == 0) {
+            return "";
+        }
+        
+        int[] map_t = new int[256];
+        
+        int l = 0, r = 0;
+        int minL = 0, minR = Integer.MAX_VALUE;
+        
+        int count = t.length();
+        
+        for (char c : t.toCharArray()) {
+            map_t[c]++;
+        }
+        
+        while (r < s.length()) {
+            char rs = s.charAt(r++);
+
+            if (--map_t[rs] >= 0) {
+                count--;
+            }
+            
+            while (count == 0) {
+                char ls = s.charAt(l);
+                if (++map_t[ls] > 0) {
+                    count += 1;
+                }
+                
+                if (minR - minL > r - l) {
+                    minL = l;
+                    minR = r;
+                }
+                
+                l++;
+            }
+        }
+        
+        return minR == Integer.MAX_VALUE ? "" : s.substring(minL, minR);
+    }
+}
+```
+
+
+
+
+
 ### Sorting
 
 ---
@@ -2320,6 +2581,63 @@ public int search(int[] nums, int target) {
         return -1;
     }
 ```
+
+
+
+#### Leetcode 31(Next Permutation)
+
+```java
+class LC31 {
+    public void nextPermutation(int[] nums) {
+        if (nums == null || nums.length < 2) {
+            return;
+        }
+        
+        int n = nums.length;
+        int asIndex = n - 2;
+        
+        //Step1: 从最后一个开始 找到第一个上升序列的位置，如果整个数组都是下降顺序，则只需要将其整体reverse就行了
+        //[3,5,4,2,1]找到第一个上升的index asIndex = 1即[3]的位置
+        while (asIndex >= 0 && nums[asIndex] >= nums[asIndex + 1]) {
+            asIndex--;
+        }
+        
+        //Step2: asIndex >= 0表示存在一个上升的位置，此时将这个元素与后半部分的下降序列的第一个比它大的数字交换，这样保证最终找到的是比当前数字大的最小的那个数字
+        //[3,5,4,2,1]最小的比当前元素大的是[4]，将这两个元素交换 变成[4,5,3,2,1]
+        if (asIndex >= 0) {
+            int firstLargerIndex = n - 1;
+            while (firstLargerIndex > 0 && nums[firstLargerIndex] <= nums[asIndex]) {
+                firstLargerIndex -= 1;
+            }
+
+            swap(nums, asIndex, firstLargerIndex);
+        }
+        
+
+        //Step3: 将整个有半部分的值按照从小到大排列 保证最终有半部分是最小的一个值
+        //[4,1,2,3,5]
+        reverseSort(nums, asIndex + 1, n - 1);
+    }
+    
+    private void swap(int[] nums, int i, int j) {
+        int temp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = temp;
+    }
+    
+    private void reverseSort(int nums[], int i, int j) {
+        if (i >= j) return;
+        
+        while (i < j) {
+            swap(nums, i, j);
+            i++;
+            j--;
+        }
+    }
+}
+```
+
+
 
 
 
@@ -2437,6 +2755,41 @@ class Solution {
 
 
 
+### Greedy
+
+#### Leetcode 612
+
+```java
+class LC621 {
+    public int leastInterval(char[] tasks, int n) {
+        //先按照字母个数进行排序 个数最多的在最后
+        int[] map = new int[26];
+        for (char c : tasks) {
+            map[c - 'A']++;
+        }
+        
+        Arrays.sort(map);
+
+        //找到个数最多的字母 然后减1 为了找到需要多少个空档填cool down 最后一段是不需要空档的
+        int maxVal = map[25] - 1;
+        //先假设这些空档全填上idle
+        int idleSlots = maxVal * n;
+        
+        //从个数第二大的开始填这些空位置 用之前假设的idle个数减去能够填的字母个数
+        for (int i = 24; i >= 0 && map[i] > 0; i--) {
+            //因为maxVal是出现最多的次数-1, 如果存在和其个数一样的字母个数，应该取小的
+            //比如A=3 B=3 n=2 那么如果先把A固定, 最后的B放到最后的A后面就可以 并不消耗idle
+            idleSlots -= Math.min(map[i], maxVal); 
+        }
+        
+        //最后的结果就是剩余没被字母填满的idle个数 + 整个task的长度
+        return idleSlots > 0 ? tasks.length + idleSlots : tasks.length;
+    }
+}
+```
+
+
+
 
 
 ### LRU/LFU Cache
@@ -2513,3 +2866,44 @@ class Solution {
    ```
 
    
+
+### Parenthesis
+
+#### Leetcode 1249
+
+```java
+class LC1249 {
+    public String minRemoveToMakeValid(String s) {
+        if (s == null || s.length() == 0) return s;
+        
+        int open = 0;
+        StringBuilder sb = new StringBuilder();
+        
+        //先移除非法的右括号
+        for (char c : s.toCharArray()) {
+            if (c == '(') {
+                open += 1;
+            } else if (c == ')') {
+                if (open == 0) {
+                    continue;
+                }
+                open -= 1;
+            }
+            sb.append(c);
+        }
+
+        StringBuilder res = new StringBuilder();
+        
+        //从后往前移除多余的左括号
+        for (int i = sb.length() - 1; i >= 0; i--) {
+            if (sb.charAt(i) == '(' && open-- > 0) {
+                continue;
+            }
+            res.append(sb.charAt(i));
+        }
+        
+        return res.reverse().toString();
+    }
+}
+```
+

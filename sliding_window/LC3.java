@@ -1,4 +1,4 @@
-class Solution {
+class LC3 {
     public int lengthOfLongestSubstring(String s) {
         if (s == null || s.length() == 0) return 0;
         

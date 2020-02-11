@@ -1,4 +1,6 @@
-class Solution {
+import java.util.*;
+
+class LC1102 {
     private int[][] dir = {
         {1, 0},
         {-1, 0},

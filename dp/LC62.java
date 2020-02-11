@@ -1,4 +1,4 @@
-class Solution {
+class LC62 {
     public int uniquePaths(int m, int n) {
         if (m == 0 || n == 0) {
             return 1;

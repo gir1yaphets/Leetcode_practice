@@ -2148,6 +2148,46 @@ class Solution {
 
 
 
+#### Leetcode 304. Range Sum Query 2D - Immutable
+
+![截屏2020-02-11下午4.13.56](capture/截屏2020-02-11下午4.13.56.png)
+
+
+
+![截屏2020-02-11下午4.14.34](capture/截屏2020-02-11下午4.14.34.png)
+
+
+
+```java
+class LC304 {
+    private int[][] dp;
+    
+    public NumMatrix(int[][] matrix) {
+        if (matrix.length == 0) return;
+        
+        int m = matrix.length, n = matrix[0].length;
+        dp = new int[m+1][n+1];
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                dp[i][j] = dp[i-1][j] + dp[i][j-1] - dp[i-1][j-1] + matrix[i-1][j-1];
+            }
+        }
+    }
+    
+    public int sumRegion(int row1, int col1, int row2, int col2) {
+        int sum = 0;
+        sum = dp[row2+1][col2+1] - dp[row1][col2+1] - dp[row2+1][col1] + dp[row1][col1];
+        
+        return sum;
+    }
+}
+```
+
+
+
+
+
 ### Pre sum问题
 
 #### Leetcode 560(Subarray Sum Equals K)
@@ -2716,6 +2756,33 @@ class Solution {
     }
 }
 ```
+
+
+
+#### Leetcode 278
+
+```java
+public class Solution extends VersionControl {
+    public int firstBadVersion(int n) {
+        int start = 1, end = n;
+        
+        while (start < end) {
+            int mid = start + (end - start) / 2;
+            
+          	//左闭右开区间，当找到一个返回true的时候舍掉这个，继续往左边找
+            if (isBadVersion(mid)) {
+                end = mid;
+            } else {
+                start = mid + 1;
+            }
+        }
+        
+        return start;
+    }
+}
+```
+
+
 
 
 

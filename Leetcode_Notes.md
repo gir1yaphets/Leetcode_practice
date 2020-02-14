@@ -2115,7 +2115,7 @@ class Solution {
 
 
 
-#### Leetcode 63(Unique Paths II)
+#### 63. Unique Paths II
 
 ```java
 class Solution {
@@ -2148,7 +2148,7 @@ class Solution {
 
 
 
-#### Leetcode 304. Range Sum Query 2D - Immutable
+#### 304. Range Sum Query 2D - Immutable
 
 ![截屏2020-02-11下午4.13.56](capture/截屏2020-02-11下午4.13.56.png)
 
@@ -2180,6 +2180,47 @@ class LC304 {
         sum = dp[row2+1][col2+1] - dp[row1][col2+1] - dp[row2+1][col1] + dp[row1][col1];
         
         return sum;
+    }
+}
+```
+
+
+
+#### 562. Longest Line of Consecutive One in Matrix
+
+```java
+class LC562 {
+    public int longestLine(int[][] M) {
+        if (M == null || M.length == 0) return 0;
+        
+        int m = M.length, n = M[0].length;
+        //正常情况只需要dp[m+1][n+1][4]从而避开i-1<0的情况 但是这题判断反对角线的时候还依赖于右边的一列，所以n+2
+        int dp[][][] = new int[m + 1][n + 2][4];
+        int max = 0;
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (M[i][j] == 1) {
+                    //row
+                    dp[i+1][j+1][0] = dp[i+1][j][0] + 1;
+                    max = Math.max(max, dp[i+1][j+1][0]);
+                    
+                    //line
+                    dp[i+1][j+1][1] = dp[i][j+1][1] + 1;
+                    max = Math.max(max, dp[i+1][j+1][1]);
+                    
+                    //diagnal
+                    dp[i+1][j+1][2] = dp[i][j][2] + 1;
+                    max = Math.max(max, dp[i+1][j+1][2]);
+                    
+                    //anti-diagnal
+                    dp[i+1][j+1][3] = dp[i][j+2][3] + 1;
+                    max = Math.max(max, dp[i+1][j+1][3]);
+                }
+            }
+        }
+        
+        return max;
     }
 }
 ```
@@ -2683,6 +2724,28 @@ class LC31 {
 
 ### BinarySearch
 
++ **Template**
+
+  ```java
+  /**
+  * 搜索区间[l, r)
+  */
+  private int binarySearch(int l, int r) {
+    	while (l < r) {
+        	int m = l + (r - l) / 2;
+        	if (g(m)) {
+              r = m; //新的搜索区间[l, m)
+          } else {
+            	l = m + 1; //新的搜索区间[m+1, r)
+          }
+      }
+    
+    	return l; //l表示找到的第一个满足g(m) = true的值
+  }
+  ```
+
+  
+
 + Sample: 找到第一个大于或者大于等于目标的模板
 
   ```java
@@ -2703,6 +2766,7 @@ class LC31 {
   
               //1. >=: 返回第一个大于等于目标的值
               //2. >: 返回第一个大于目标的值
+            	//返回第一个g(m) == true的值
               if (array[mid] > target) {
                   //只要中点值大于目标值就在中点的左区间找，因为l=mid+1,所以最终跳出循环的时候正好是第一个大于目标的值
                   r = mid - 1;
@@ -2778,6 +2842,35 @@ public class Solution extends VersionControl {
         }
         
         return start;
+    }
+}
+```
+
+
+
+#### Leetcode 69. Sqrt(x)
+
+```java
+class Solution {
+	  /**
+     * 这道题是找上界，所以可以找到 >根号值的下界，然后再减去1
+     */
+    public int mySqrt(int x) {
+        int lo = 1, hi = x;
+
+        if (x < 2) return x;
+        
+        while (lo < hi) {
+            int mid = lo + (hi - lo) / 2;
+            
+            if (mid > x / mid) {
+                hi = mid;
+            } else {
+                lo = mid + 1;
+            }
+        }
+        
+        return lo - 1;
     }
 }
 ```

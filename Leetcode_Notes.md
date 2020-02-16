@@ -76,6 +76,12 @@
   Collections.sort(list, (o1, o2) -> o1.getKey() - o2.getKey());
   ```
 
++ **Comparator排序规则**
+
+  + compare方法 return 1表示两个元素需要换位，否则不需要
+    + 经常写的(o2, o2) ->  o1 - o2 如果o1 - o2 > 0; 则说明o1>o2, o1 o2要交换,所以是自然序,即之前记的前-后是升序
+  + (o2, o2) ->  o2 - o1 如果o2 - o1 < 0 说明o1 > o2 return -1, -1代表不需要换位，所以这时候是降序
+
 + TreeMap
 
   + containsKey、get、put 和 remove 的时间复杂度是 log(n)
@@ -100,11 +106,11 @@
 
 
 
-### LinkedList
+### 1. LinkedList
 
 ---
 
-#### ListNode 23
+#### 23. Merge k Sorted Lists
 
 > **链表和PriorityQueue结合**
 
@@ -144,7 +150,7 @@ class LC23 {
 
 
 
-#### Leetcode 445(链表加法)
+#### 445. Add Two Numbers II
 
 ```java
 class LC445 {
@@ -196,7 +202,7 @@ class LC445 {
 
 
 
-#### Leetcode 24
+#### 24. Swap Nodes in Pairs
 
 ```java
 class LC24 {
@@ -226,7 +232,7 @@ class LC24 {
 
 
 
-#### Leetcode 148 (Sort list)
+#### 148. Sort List
 
 ```java
 class LC148 {
@@ -289,7 +295,7 @@ class LC148 {
 
 
 
-### Tree
+### 2. Tree
 
 ---
 
@@ -298,7 +304,9 @@ class LC148 {
   + 将当前节点左右节点的最长路径返回过父亲节点(左右节点只能选一个)
   + 关联题：124, 543, 687
 
-#### Leetcode 124(max sum subtree)
+
+
+#### 124. Binary Tree Maximum Path Sum 
 
 求tree中某个sum最大的子树，不需要经过root
 
@@ -334,7 +342,7 @@ private int helper(TreeNode root) {
 
 
 
-#### Leetcode 235(LCA)
+#### 235. Lowest Common Ancestor of a Binary Search Tree 
 
 BST的最小公共祖先(LCA)
 
@@ -362,9 +370,9 @@ class LC235 {
 
 
 
-#### Leetcode 236(LCA)
+#### 236. Lowest Common Ancestor of a Binary Tree   
 
-普通binary tree的Lowest common ancestor
+> 普通binary tree的Lowest common ancestor
 
 ```java
 /**
@@ -404,7 +412,7 @@ class LC236 {
 
 
 
-#### Leetcode 366(按顺序输出叶子节点)
+#### 366. Find Leaves of Binary Tree
 
 bottom-up计数问题
 
@@ -451,9 +459,9 @@ class LC336 {
 
 
 
-#### Leetcode 314(Vertical Order Traversal)
+#### 314. Binary Tree Vertical Order Traversal   
 
-+ 错误DFS做法
+错误DFS做法
 
 ```java
 /**
@@ -568,7 +576,7 @@ class Solution {
 
 
 
-#### Leetcode 109(链表转平衡bst)
+#### 109. Convert Sorted List to Binary Search Tree    
 
 Given a singly linked list where elements are sorted in ascending order, convert it to a height balanced BST.
 
@@ -604,7 +612,7 @@ class Solution {
 
 
 
-#### Leetcode 110(检验平衡二叉树)
+#### 110. Balanced Binary Tree    
 
 是否是平衡二叉树
 
@@ -637,7 +645,7 @@ class LC110 {
 
 
 
-#### Leetcode 987
+#### 987. Vertical Order Traversal of a Binary Tree  
 
 按垂直方向输出tree node，相同行的两个值按照大小排序
 
@@ -729,9 +737,9 @@ class Solution {
 
 
 
-#### Leetcode 113
+#### 113. Path Sum II
 
-输出和为sum的路径list
+> 输出和为sum的路径list
 
 ```java
 class Solution {
@@ -769,7 +777,7 @@ class Solution {
 
 
 
-#### Leetcode 543(最长半径)
+#### 543. Diameter of Binary Tree 
 
 求最长半径，不一定要经过root
 
@@ -832,9 +840,9 @@ class Solution {
 
 
 
-#### Leetcode 687(相同值的节点的最长路径)
+#### 687. Longest Univalue Path   
 
-有相同值节点的最长路径，不需要过root
+> 有相同值节点的最长路径，不需要过root
 
 ```java
 /**
@@ -864,7 +872,7 @@ private int helper(TreeNode root, int val) {
 
 
 
-#### Leetcode 250(uni value)
+#### 250. Count Univalue Subtrees
 
 ```java
 class Solution {
@@ -909,13 +917,13 @@ class Solution {
 
 
 
-### Graph
+### 3. Graph
 
 ---
 
-#### Leetcode 802
+#### 802. Find Eventual Safe States  
 
-判断有向图中哪些点不存在环
+> 判断有向图中哪些点不存在环
 
 ```java
 class Solution {
@@ -966,11 +974,153 @@ class Solution {
 
 
 
-### DFS
+#### 1334. Find the City With the Smallest Number of Neighbors at a Threshold Distance
+
+##### 1. Floyed Warshall
+
+> Time: O(n^3)
+>
+> Space: O(n^2)
+
+```java
+class LC1334 {
+    public int findTheCity(int n, int[][] edges, int distanceThreshold) {
+        int[][] dp = new int[n][n];
+        
+        //如果两个点非连通，为了后面能将该两点间距离更新为经过某个中间点的距离，所以这里要初始化为最大值
+        for (int[] row : dp) {
+            Arrays.fill(row, 10001);
+        }
+        
+        for (int i = 0; i < n; i++) {
+            dp[i][i] = 0;
+        }
+        
+        for (int[] e : edges) {
+            dp[e[0]][e[1]] = dp[e[1]][e[0]] = e[2];
+        }
+        
+        for (int k = 0; k < n; k++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[k][j]);
+                }
+            }
+        }
+        
+        int min = 10001;
+        int res = 0;
+        
+        for (int i = 0; i < n; i++) {
+            int count = 0;
+            for (int j = 0; j < n; j++) {
+                if (dp[i][j] <= distanceThreshold) {
+                    count += 1;
+                }
+            }
+            
+            if (count <= min) {
+                min = count;
+                res = i;
+            }
+        }
+        
+        return res;
+    }
+}
+```
+
+##### 2. Dijkstra
+
+```java
+class LC1334 {
+    private Map<Integer, List<int[]>> g = new HashMap<>();
+    
+    public int findTheCity_dij(int n, int[][] edges, int distanceThreshold) {
+        buildGraph(edges);
+        
+        int res = 0;
+        int min = n;
+        
+        for (int i = 0; i < n; i++) {
+            int[] costs = dij(n, i);
+            
+            int count = 0;
+            
+            for (int cost : costs) {
+                if (cost <= distanceThreshold) {
+                    count += 1;
+                }
+            }
+        
+            if (count <= min) {
+                min = count;
+                res = i;
+            }
+        }
+        
+        return res;
+    }
+    
+    private void buildGraph(int[][] edges) {
+        for (int[] e : edges) {
+            int u = e[0], v = e[1], w = e[2];
+            
+            List<int[]> ulist = g.getOrDefault(u, new ArrayList<>());
+            List<int[]> vlist = g.getOrDefault(v, new ArrayList<>());
+            
+            ulist.add(new int[]{v, w});
+            vlist.add(new int[]{u, w});
+            
+            g.put(u, ulist);
+            g.put(v, vlist);
+        }
+    }
+    
+    private int[] dij(int n, int src) {
+        int[] cost = new int[n];
+        Set<Integer> visited = new HashSet<>();
+        PriorityQueue<Integer> pq = new PriorityQueue<>((o1, o2) -> cost[o1] - cost[o2]);
+        
+        Arrays.fill(cost, 10001);
+        cost[src] = 0;
+        pq.offer(src);
+        
+        while (!pq.isEmpty()) {
+            int v = pq.poll();
+            visited.add(v);
+            
+            List<int[]> nbList = g.get(v);
+            if (nbList != null) {
+                for (int[] nb : nbList) {
+                    int u = nb[0], w = nb[1];
+                    
+                    if (visited.contains(u)) {
+                        continue;
+                    }
+                    
+                    if (cost[u] > w + cost[v]) {
+                        cost[u] = w + cost[v];
+                        pq.offer(u);
+                    }
+                }
+            }
+        }
+        
+        return cost;
+    }
+}
+```
+
+
+
+
+
+### 4. DFS
 
 ---
 
-#### Leetcode 210
+#### 210. Course Schedule II 
 
 排课问题，可以用拓扑排序和DFS做
 
@@ -1052,205 +1202,7 @@ class Solution {
 
 
 
-#### Leetcode 39
-
-搜索所有等于sum的组合
-
-```java
-class Solution {
-    private List<List<Integer>> res = new ArrayList<>();
-    
-    public List<List<Integer>> combinationSum(int[] candidates, int target) {
-        dfs(candidates, target, 0, 0, new ArrayList<>());
-        return res;
-    }
-    
-    /**
-     * 需要用start记录当前遍历的其实位置，否则会出现解的排列组合
-     * [2,3,6,7] 当搜索到3的时候避免再回去搜索2，因为2的所有解都已经搜索完了
-     * @param can
-     * @param target
-     * @param sum
-     * @param start
-     * @param sol
-     */
-    private void dfs(int[] can, int target, int sum, int start, List<Integer> sol) {
-        if (sum == target) {
-            res.add(new ArrayList<>(sol));
-            return;
-        }
-        
-        for (int i = start; i < can.length; i++) {
-            //放在这里而不是方法开头，避免一次递归
-            if (sum + can[i] > target) {
-                continue;
-            }
-            
-            sol.add(can[i]);
-            dfs(can, target, sum + can[i], i, sol);
-            sol.remove(sol.size() - 1);
-        }
-    }
-}
-```
-
-
-
-#### Leetcode 40
-
-在39题的基础上去掉重复元素和重复解
-
-```java
-class Solution {
-    private List<List<Integer>> res = new ArrayList<>();
-    
-    public List<List<Integer>> combinationSum2(int[] candidates, int target) {
-        Arrays.sort(candidates);
-        dfs(candidates, target, 0, 0, new ArrayList<>());
-        return res;
-    }
-    
-    private void dfs(int[] can, int target, int sum, int start, List<Integer> sol) {
-        if (sum == target) {
-            res.add(new ArrayList<>(sol));
-            return;
-        }
-        
-        for (int i = start; i < can.length; i++) {
-            if (sum + can[i] > target) {
-                continue;
-            }
-            
-            //当遇到重复的元素不放到list中
-            if (i > start && can[i] == can[i - 1]) {
-                continue;
-            }
-            
-            sol.add(can[i]);
-            //下一个元素不能使用当前元素，所以i+1作为下次dfs的起点
-            dfs(can, target, sum + can[i], i + 1, sol);
-            sol.remove(sol.size() - 1);
-        }
-    }
-}
-```
-
-
-
-#### Leetcode 78
-
-```java
-/**
- * T: O(2^n) 对于每一个数字，可以选或者不选，既有两种选择
- * S: O(n) 最多的递归层数是每一个数字都选
- */
-class Solution {
-    private List<List<Integer>> res = new ArrayList<>();
-    
-    public List<List<Integer>> subsets(int[] nums) {
-        dfs(nums, 0, new ArrayList<>());
-        return res;
-    }
-    
-    private void dfs(int[] nums, int start, List<Integer> sol) {
-        //注意这个要在结束条件之前，否则最后一次加不进去
-        res.add(new ArrayList<>(sol));
-        
-        if (start == nums.length) {
-            return;
-        }
-        
-        for (int i = start; i < nums.length; i++) {
-            sol.add(nums[i]);
-            dfs(nums, i + 1, sol);
-            sol.remove(sol.size() - 1);
-        }
-    }
-}
-```
-
-
-
-#### Leetcode 77
-
-> Given two integers *n* and *k*, return all possible combinations of *k* numbers out of 1 ... *n*
-
-```java
-class Solution {
-    private List<List<Integer>> res = new ArrayList<>();
-    
-    public List<List<Integer>> combine(int n, int k) {
-        dfs(n, k, 1, new ArrayList<>());
-        return res;
-    }
-
-    private void dfs(int n, int k, int start, List<Integer> sol) {
-        if (k == 0) {
-            res.add(new ArrayList<>(sol));
-            return;
-        }
-        
-        for (int i = start; i <= n - k + 1; i++) {
-            sol.add(i);
-            //这里可以进行剪枝，因为要凑满总共k个的集合，所以i最大能取到n-k+1,当总共有n个数字的时候，如果i=n-k+1，i~n有n-(n-k+1)=k个数字
-            //但是随着每次取一个元素放到sol中，i可以取的值开始进行增大，所以这里将k-1给下一次递归,当k=2的时候(即还剩两个元素可以选)，i最大可以取n-1
-            //当k=1的时候，i最大等于n，取到最后一个元素，下一次k就等于0了，将该组解加到res中
-            dfs(n, k - 1, i + 1, sol);
-            sol.remove(sol.size() - 1);
-        }
-    }
-}
-```
-
-
-
-#### Leetcode 47
-
-产生没有重复集合的permutation
-
-```java
-class Solution {
-    private List<List<Integer>> res = new ArrayList<>();
-    
-    public List<List<Integer>> permuteUnique(int[] nums) {
-        if (nums.length == 0) return res;
-        
-        Arrays.sort(nums);
-        boolean[] visited = new boolean[nums.length];
-        
-        dfs(nums, visited, new ArrayList<>());
-        
-        return res;
-    }
-    
-    private void dfs(int[] nums, boolean[] visited, List<Integer> sol) {
-        if (sol.size() == nums.length) {
-            res.add(new ArrayList<>(sol));
-            return;
-        }
-        
-        for (int i = 0; i < nums.length; i++) {
-            //e.g [1,1,2] 正常情况第一个1使用过，这个时候可以使用第二个1
-            //但当递归到第二个1的时候，若前一个元素与它相等，并且还没有被使用过，那么这个元素就不需要再使用，因为再使用这个元素作为新的起点会和它前一个元素差生一样的集合
-            if (visited[i] || (i > 0 && !visited[i - 1] && nums[i] == nums[i-1])) {
-                continue;
-            }
-            
-            visited[i] = true;
-            sol.add(nums[i]);
-            
-            dfs(nums, visited, sol);
-            
-            visited[i] = false;
-            sol.remove(sol.size() - 1);
-        }
-    }
-}
-```
-
-
-
-#### Leetcode 212
+#### 212. Word Search II 
 
 dfs与字典数结合
 
@@ -1349,11 +1301,11 @@ class Solution {
 
 
 
-### BFS
+### 5. BFS
 
 ---
 
-#### Leetcode 1102
+#### 1102. Path With Maximum Minimum Value
 
 BFS + PriorityQueue
 
@@ -1421,9 +1373,7 @@ class Solution {
 
 
 
-#### Leetcode 505
-
-maze#2
+#### 505. The Maze II
 
 ```java
 class LC505 {
@@ -1483,7 +1433,7 @@ class LC505 {
 
 
 
-#### Leetcode 269(Alien Dictionary)
+#### 269. Alien Dictionary
 
 ```java
 import java.util.*;
@@ -1559,16 +1509,19 @@ class LC269 {
 
 
 
-### Backtracking
+### 6. Backtracking
 
 ---
 
-#### Leetcode 78
+#### 78. Subset
 
-**一定注意最终加入到res的需要new ArrayList，否则都被remov掉了**
+***一定注意最终加入到res的需要new ArrayList，否则都被remov掉了***
 
 ```java
-//Subset
+/**
+ * T: O(2^n) 对于每一个数字，可以选或者不选，既有两种选择
+ * S: O(n) 最多的递归层数是每一个数字都选
+ */
 class Solution {
     private List<List<Integer>> res = new ArrayList<>();
     
@@ -1578,7 +1531,12 @@ class Solution {
     }
     
     private void dfs(int[] nums, int start, List<Integer> sol) {
+        //注意这个要在结束条件之前，否则最后一次加不进去
         res.add(new ArrayList<>(sol));
+        
+        if (start == nums.length) {
+            return;
+        }
         
         for (int i = start; i < nums.length; i++) {
             sol.add(nums[i]);
@@ -1591,7 +1549,205 @@ class Solution {
 
 
 
-#### Leetcode 46
+#### 39. Combination Sum   
+
+搜索所有等于sum的组合
+
+```java
+class Solution {
+    private List<List<Integer>> res = new ArrayList<>();
+    
+    public List<List<Integer>> combinationSum(int[] candidates, int target) {
+        dfs(candidates, target, 0, 0, new ArrayList<>());
+        return res;
+    }
+    
+    /**
+     * 需要用start记录当前遍历的其实位置，否则会出现解的排列组合
+     * [2,3,6,7] 当搜索到3的时候避免再回去搜索2，因为2的所有解都已经搜索完了
+     * @param can
+     * @param target
+     * @param sum
+     * @param start
+     * @param sol
+     */
+    private void dfs(int[] can, int target, int sum, int start, List<Integer> sol) {
+        if (sum == target) {
+            res.add(new ArrayList<>(sol));
+            return;
+        }
+        
+        for (int i = start; i < can.length; i++) {
+            //放在这里而不是方法开头，避免一次递归
+            if (sum + can[i] > target) {
+                continue;
+            }
+            
+            sol.add(can[i]);
+            dfs(can, target, sum + can[i], i, sol);
+            sol.remove(sol.size() - 1);
+        }
+    }
+}
+```
+
+
+
+#### 40. Combination Sum II  
+
+在39题的基础上去掉重复元素和重复解
+
+```java
+class Solution {
+    private List<List<Integer>> res = new ArrayList<>();
+    
+    public List<List<Integer>> combinationSum2(int[] candidates, int target) {
+        Arrays.sort(candidates);
+        dfs(candidates, target, 0, 0, new ArrayList<>());
+        return res;
+    }
+    
+    private void dfs(int[] can, int target, int sum, int start, List<Integer> sol) {
+        if (sum == target) {
+            res.add(new ArrayList<>(sol));
+            return;
+        }
+        
+        for (int i = start; i < can.length; i++) {
+            if (sum + can[i] > target) {
+                continue;
+            }
+            
+            //当遇到重复的元素不放到list中
+            if (i > start && can[i] == can[i - 1]) {
+                continue;
+            }
+            
+            sol.add(can[i]);
+            //下一个元素不能使用当前元素，所以i+1作为下次dfs的起点
+            dfs(can, target, sum + can[i], i + 1, sol);
+            sol.remove(sol.size() - 1);
+        }
+    }
+}
+```
+
+
+
+#### 78. Subsets    
+
+```java
+/**
+ * T: O(2^n) 对于每一个数字，可以选或者不选，既有两种选择
+ * S: O(n) 最多的递归层数是每一个数字都选
+ */
+class Solution {
+    private List<List<Integer>> res = new ArrayList<>();
+    
+    public List<List<Integer>> subsets(int[] nums) {
+        dfs(nums, 0, new ArrayList<>());
+        return res;
+    }
+    
+    private void dfs(int[] nums, int start, List<Integer> sol) {
+        //注意这个要在结束条件之前，否则最后一次加不进去
+        res.add(new ArrayList<>(sol));
+        
+        if (start == nums.length) {
+            return;
+        }
+        
+        for (int i = start; i < nums.length; i++) {
+            sol.add(nums[i]);
+            dfs(nums, i + 1, sol);
+            sol.remove(sol.size() - 1);
+        }
+    }
+}
+```
+
+
+
+#### 77. Combinations    
+
+> Given two integers *n* and *k*, return all possible combinations of *k* numbers out of 1 ... *n*
+
+```java
+class Solution {
+    private List<List<Integer>> res = new ArrayList<>();
+    
+    public List<List<Integer>> combine(int n, int k) {
+        dfs(n, k, 1, new ArrayList<>());
+        return res;
+    }
+
+    private void dfs(int n, int k, int start, List<Integer> sol) {
+        if (k == 0) {
+            res.add(new ArrayList<>(sol));
+            return;
+        }
+        
+        for (int i = start; i <= n - k + 1; i++) {
+            sol.add(i);
+            //这里可以进行剪枝，因为要凑满总共k个的集合，所以i最大能取到n-k+1,当总共有n个数字的时候，如果i=n-k+1，i~n有n-(n-k+1)=k个数字
+            //但是随着每次取一个元素放到sol中，i可以取的值开始进行增大，所以这里将k-1给下一次递归,当k=2的时候(即还剩两个元素可以选)，i最大可以取n-1
+            //当k=1的时候，i最大等于n，取到最后一个元素，下一次k就等于0了，将该组解加到res中
+            dfs(n, k - 1, i + 1, sol);
+            sol.remove(sol.size() - 1);
+        }
+    }
+}
+```
+
+
+
+#### 47. Permutations II    
+
+> 产生没有重复集合的permutation
+
+```java
+class Solution {
+    private List<List<Integer>> res = new ArrayList<>();
+    
+    public List<List<Integer>> permuteUnique(int[] nums) {
+        if (nums.length == 0) return res;
+        
+        Arrays.sort(nums);
+        boolean[] visited = new boolean[nums.length];
+        
+        dfs(nums, visited, new ArrayList<>());
+        
+        return res;
+    }
+    
+    private void dfs(int[] nums, boolean[] visited, List<Integer> sol) {
+        if (sol.size() == nums.length) {
+            res.add(new ArrayList<>(sol));
+            return;
+        }
+        
+        for (int i = 0; i < nums.length; i++) {
+            //e.g [1,1,2] 正常情况第一个1使用过，这个时候可以使用第二个1
+            //但当递归到第二个1的时候，若前一个元素与它相等，并且还没有被使用过，那么这个元素就不需要再使用，因为再使用这个元素作为新的起点会和它前一个元素差生一样的集合
+            if (visited[i] || (i > 0 && !visited[i - 1] && nums[i] == nums[i-1])) {
+                continue;
+            }
+            
+            visited[i] = true;
+            sol.add(nums[i]);
+            
+            dfs(nums, visited, sol);
+            
+            visited[i] = false;
+            sol.remove(sol.size() - 1);
+        }
+    }
+}
+```
+
+
+
+#### 46. Permutations
 
 ```java
 //Permutation
@@ -1633,38 +1789,9 @@ class LC46 {
 
 
 
-#### Leetcode 77
+#### 131. Palindrome Partitioning  
 
-```java
-class Solution {
-    private List<List<Integer>> res = new ArrayList<>();
-    
-    public List<List<Integer>> combine(int n, int k) {
-        //dfs
-        dfs(n, k, 1, new ArrayList<>());
-        return res;
-    }
-    
-    private void dfs(int n, int k, int start, List<Integer> sol) {
-        if (k == sol.size()) {
-            res.add(new ArrayList<>(sol));
-            return;
-        }
-        
-        for (int i = start; i <= n; i++) {
-            sol.add(i);
-            dfs(n, k, i + 1, sol);
-            sol.remove(sol.size() - 1);
-        }
-    }
-}
-```
-
-
-
-#### Leetcode 131
-
-找到所有的palindrome
+> 找到所有的palindrome
 
 ```java
 class LC131 {
@@ -1716,13 +1843,135 @@ class LC131 {
 
 
 
+#### 464. Can I Win
+
+```java
+class LC464 {
+    public static void main(String[] args) {
+        new LC464().canIWin(3, 4);
+    }
+
+    public boolean canIWin(int maxChoosableInteger, int desiredTotal) {
+        if ((1 + maxChoosableInteger) * maxChoosableInteger / 2 < desiredTotal) return false;
+        
+        if (desiredTotal <= 0) return true;
+        
+        byte[] visited = new byte[1 << maxChoosableInteger];
+        
+        //判断当前player是否能赢，第一个player先调用，所以返回的就是第一个player的结果
+        return canWin(maxChoosableInteger, desiredTotal, visited, 0);
+    }
+    
+    /**
+     * @param maxChoosableInteger
+     * @param remain
+     * @param visited: current all solutions, seems like a HashMap<Integer, Boolean> key is all current used number, value is the result for that solution
+     *                 [0]: unknown; [-1]: lose; [1]: win
+     * @param state: bitmask for all the number used, to check whether current number is used
+     * @return
+     */
+    private boolean canWin(int maxChoosableInteger, int remain, byte[] visited, int state) {
+        if (visited[state] != 0) return visited[state] == 1;
+        
+        for (int i = 0; i < maxChoosableInteger; i++) {
+            if ((state & (1 << i)) != 0) continue;
+            
+            //I can use (i+1) to win or opponent cannot use remaining (i+1) to win -> I will win
+            //But if canWin return true for the opponent, it will continuously check other solution
+            //***Only when whatever opponent choose, current player will always win, return current player wins.
+            if (remain - (i + 1) <= 0 || !canWin(maxChoosableInteger, remain - (i + 1), visited, state | (1 << i))) {
+                visited[state] = 1;
+                return true;
+            }
+        }
+        
+        //if all the combination for current player cannot win, then update the result
+        visited[state] = -1;
+        
+        return false;
+    }
+}
+    
+```
 
 
-### DP
+
+#### 294. Flip Game II
+
+```java
+import java.util.*;
+
+class LC294 {
+    public boolean canWin(String s) {
+        if (s == null || s.length() < 2) return false;
+        
+        return canWin(s, new HashMap<>());
+    }
+    
+    private boolean canWin(String s, Map<String, Boolean> memo) {
+        if (memo.containsKey(s)) {
+            return memo.get(s);
+        }
+        
+        for (int i = 0; i < s.length() - 1; i++) {
+            if (s.charAt(i) == '+' && s.charAt(i + 1) == '+') {
+                String opponent = s.substring(0, i) + "--" + s.substring(i + 2);
+                
+                if (!canWin(opponent, memo)) {
+                    memo.put(s, true);
+                    return true;
+                }
+            }
+        }
+        
+        memo.put(s, false);
+        return false;
+    }
+}
+```
+
+
+
+#### 486. Predict the Winner
+
+```java
+class LC486 {
+    public boolean PredictTheWinner(int[] nums) {
+        int n = nums.length;
+        int[] memo = new int[n * n];
+        return getScore(nums, 0, nums.length - 1, memo) >= 0;
+    }
+    
+    public int getScore(int[] nums, int l, int r, int[] memo) {
+        if (l == r) {
+            return nums[l];
+        }
+        
+        if (memo[l * nums.length + r] != 0) {
+            return memo[l * nums.length + r];
+        }
+        
+        //若nums[l]是当前Player取的值，对手就在[l+1, r]取， 若当前Player取nums[r],则对手就在[l, r-1]取
+        //但是当前选手要取nums[l], nums[r]产生得分较大的
+        int diff = Math.max(nums[l] - getScore(nums, l + 1, r, memo), nums[r] - getScore(nums, l, r - 1, memo));
+
+        //把这个自区间产生的解记录下来
+        memo[l * nums.length + r] = diff;
+
+        return diff;
+    }
+}
+```
+
+
+
+
+
+### 7. DP
 
 ---
 
-#### Leetcode 139
+#### 139. Word Break    
 
 ***将字符串拆成两部分，用dp记录前半部分是否能切割，然后check后半部分单词是否在字典中***，这种方法很常见
 
@@ -1828,7 +2077,7 @@ private boolean helper(String s, List<String> wordDict, int start, Boolean[] mem
 
 
 
-#### Leetcode 140
+#### 140. Word Break II   
 
 这道题直接用dfs也会TLE, 所以也需要进行记忆递归，记忆递归需要通过返回值将存住的结果直接返回去
 
@@ -1861,7 +2110,9 @@ private boolean helper(String s, List<String> wordDict, int start, Boolean[] mem
 
 
 
-#### Leetcode 322(背包问题)
+#### 322. Coin Change 
+
+##### 背包问题
 
 dp\[i][j]表示使用前i种不同硬币达到amount的最小数量
 
@@ -1907,7 +2158,7 @@ public int coinChange_2(int[] coins, int amount) {
 
 
 
-#### Leetcode 1137
+#### 1137. N-th Tribonacci Number  
 
 ```java
 class Solution {
@@ -1929,9 +2180,9 @@ class Solution {
 
 
 
-#### Leetcode 70
+#### 70. Climbing Stairs 
 
-爬楼梯问题，滚动数组
+> 爬楼梯问题，滚动数组
 
 ```java
 class Solution {
@@ -1964,9 +2215,9 @@ class Solution {
 
 
 
-#### Leetcode 53
+#### 53. Maximum Subarray  
 
-求subarray的和的最大值
+> 求subarray的和的最大值
 
 ```java
 class LC53 {
@@ -2000,9 +2251,9 @@ class LC53 {
 
 
 
-#### Leetcode 300(LIS)
+#### 300. Longest Increasing Subsequence  
 
-最长上升子序列LIS，两种做法dp和二分+dp
+> 最长上升子序列LIS，两种做法dp和二分+dp
 
 ```java
 import java.util.*;
@@ -2084,7 +2335,7 @@ class LC300 {
 
 
 
-#### Leetcode 122(股票问题)
+#### 122. Best Time to Buy and Sell Stock II
 
 ```java
 class Solution {
@@ -2186,7 +2437,7 @@ class LC304 {
 
 
 
-#### Leetcode 221.Maximal Square
+#### 221. Maximal Square
 
 > dp\[i]\[j]: \[0][0] ~ \[i][j]中最长的全是1的边长
 >
@@ -2225,11 +2476,9 @@ class Solution {
 
 
 
+##### 7.1 Pre sum问题
 
-
-### Pre sum问题
-
-#### Leetcode 560(Subarray Sum Equals K)
+###### 560. Subarray Sum Equals K
 
 ```java
 		/**
@@ -2271,7 +2520,7 @@ class Solution {
 
 
 
-#### Leetcode 523
+###### 523. Continuous Subarray Sum
 
 ```java
 
@@ -2314,11 +2563,11 @@ class LC523 {
 
 
 
-### Union Find
+### 8. Union Find
 
 ---
 
-#### Leetcode 1135(Connecting Cities With Minimum Cost)
+#### 1135. Connecting Cities With Minimum Cost
 
 ```java
 class Solution {
@@ -2364,7 +2613,9 @@ class Solution {
 
 
 
-### Trie
+### 9. Trie
+
+---
 
 + 每一个TrieNode都带有一个TrieNode数组类型的children元素，初始化的时候数组的每一个TrieNode都是null。当插入单词的时候将char放到对应的数组位置上, **比如 'c'就放到children[2]的位置, 但和一般存储不同点在于 不是将chidlren[2] = 'c' 而是-> children[c-'a] = new TrieNode(); 即当chilren[2] != null说明这个位置存储了一个字母**
 
@@ -2440,19 +2691,19 @@ public boolean startsWith(String prefix) {
 
 
 
-### Stack
+### 10. Stack
 
 ---
 
 
 
-### Two pointer
+### 11. Two pointer
 
 ---
 
-**木桶存水问题**
+#### 42. Trapping Rain Water
 
-#### Leetcode 42
+> **木桶存水问题**
 
 ```java
 class LC42 {
@@ -2486,11 +2737,11 @@ class LC42 {
 
 
 
-### Sliding Window
+### 12. Sliding Window
 
-#### Leetcode 3
+---
 
-Longest Substring Without Repeating Characters
+#### 3. Longest Substring Without Repeating Characters  
 
 ```java
 class Solution {
@@ -2525,7 +2776,7 @@ class Solution {
 
 
 
-#### Leetcode 76(Minimum Window Substring)
+#### 76. Minimum Window Substring
 
 ```java
 class LC76 {
@@ -2581,13 +2832,13 @@ class LC76 {
 
 
 
-### Sorting
+### 13. Sorting
 
 ---
 
-#### Leetcode 33
+#### 33. Search in Rotated Sorted Array   
 
-在一个被反转一次的有序数组中搜索target
+> 在一个被反转一次的有序数组中搜索target
 
 ```java
 class LC33 {
@@ -2663,7 +2914,7 @@ public int search(int[] nums, int target) {
 
 
 
-#### Leetcode 31(Next Permutation)
+#### 31. Next Permutation
 
 ```java
 class LC31 {
@@ -2720,7 +2971,7 @@ class LC31 {
 
 
 
-### BinarySearch
+### 14. BinarySearch
 
 + **Template**
 
@@ -2780,7 +3031,7 @@ class LC31 {
 
 
 
-#### Leetcode 34
+#### 34. Find First and Last Position of Element in Sorted Array    
 
 ```java
 class Solution {
@@ -2821,7 +3072,7 @@ class Solution {
 
 
 
-#### Leetcode 278
+#### 278. First Bad Version  
 
 ```java
 public class Solution extends VersionControl {
@@ -2846,7 +3097,7 @@ public class Solution extends VersionControl {
 
 
 
-#### Leetcode 69. Sqrt(x)
+#### 69. Sqrt(x)
 
 ```java
 class Solution {
@@ -2877,11 +3128,9 @@ class Solution {
 
 
 
-### PriorityQueue
+### 15. PriorityQueue
 
-#### Leetcode 253
-
-Meeting room
+#### 253. Meeting Rooms II 
 
 ```java
 class Solution {
@@ -2911,11 +3160,11 @@ class Solution {
 
 
 
+### 16. Greedy
 
+---
 
-### Greedy
-
-#### Leetcode 612
+#### 612. Shortest Distance in a Plane
 
 ```java
 class LC621 {
@@ -2950,7 +3199,7 @@ class LC621 {
 
 
 
-### LRU/LFU Cache
+### 17. LRU/LFU Cache
 
 ---
 
@@ -3025,9 +3274,9 @@ class LC621 {
 
    
 
-### Parenthesis
+### 18. Parenthesis
 
-#### Leetcode 1249
+#### 1249. Minimum Remove to Make Valid Parentheses
 
 ```java
 class LC1249 {

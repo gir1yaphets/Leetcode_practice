@@ -1114,6 +1114,136 @@ class LC1334 {
 
 
 
+#### 130. Surrounded Regions
+
+> 从边缘的O开始dfs，只要和边缘的O相连的都不能变成X，其余的O可以变成X
+
+```java
+class Solution {
+    private int[][] dir = {
+        {1, 0},
+        {-1, 0},
+        {0, 1},
+        {0, -1}
+    };
+    
+    public void solve(char[][] board) {
+        if (board.length == 0) return;
+        int m = board.length, n = board[0].length;
+        
+        //first row, col from 0 ~ n-1
+        for (int j = 0; j < n; j++) {
+            if (board[0][j] == 'O') {
+                dfs(board, 0, j);
+            }
+        }
+        
+        //first col, row from 1 ~ m
+        for (int i = 1; i < m; i++) {
+            if (board[i][0] == 'O') {
+                dfs(board, i, 0);
+            }
+        }
+        
+        for (int j = 1; j < n; j++) {
+            if (board[m-1][j] == 'O') {
+                dfs(board, m-1, j);
+            }
+        }
+        
+        for (int i = 1; i < m-1; i++) {
+            if (board[i][n-1] == 'O') {
+                dfs(board, i, n-1);
+            }
+        }
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (board[i][j] != '#') {
+                    board[i][j] = 'X';
+                } else {
+                    board[i][j] = 'O';
+                }
+            }
+        }
+    }
+    
+    private void dfs(char[][] board, int startx, int starty) {
+        board[startx][starty] = '#';
+        for (int[] d : dir) {
+            int x = startx + d[0], y = starty + d[1];
+            
+            if (x <= 0 || y <= 0 || x >= board.length - 1 || y >= board[0].length - 1 || board[x][y] != 'O') {
+                continue;
+            }
+            
+            dfs(board, x, y);
+        }
+    }
+}
+```
+
+
+
+#### 417. Pacific Atlantic Water Flow
+
+```java
+class Solution {
+    private int[][] dirs = {
+        {1, 0},
+        {-1, 0},
+        {0, 1},
+        {0, -1}
+    };
+    
+    private List<List<Integer>> res = new ArrayList<>();
+    
+    public List<List<Integer>> pacificAtlantic(int[][] matrix) {
+        if (matrix.length == 0) return res;
+        
+        int m = matrix.length, n = matrix[0].length;
+        int[][] vis = new int[m][n];
+        
+        for (int j = 0; j < n; j++) {
+            dfs(matrix, 0, j, vis, 1);
+            dfs(matrix, m - 1, j, vis, 2);
+        }
+        
+        //注意 这里i不能从1~m-1 因为是两个不同的 在确认pac的时候并没有确认atl
+        for (int i = 0; i < m; i++) {
+            dfs(matrix, i, 0, vis, 1);
+            dfs(matrix, i, n - 1, vis, 2);
+        }
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (vis[i][j] == 3) {
+                    res.add(Arrays.asList(i, j));
+                }
+            }
+        }
+        
+        return res;
+    }
+    
+    private void dfs(int[][] matrix, int startx, int starty, int[][] vis, int flag) {
+        vis[startx][starty] |= flag;
+        
+        for (int[] d : dirs) {
+            int x = startx + d[0], y = starty + d[1];
+            
+            if (x < 0 || y < 0 || x >= matrix.length || y >= matrix[0].length || matrix[startx][starty] > matrix[x][y] || (vis[x][y] & flag) != 0) {
+                continue;
+            }
+            
+            dfs(matrix, x, y, vis, flag);
+        }
+    }
+}
+```
+
+
+
 
 
 ### 4. DFS
@@ -1506,6 +1636,89 @@ class LC269 {
 ```
 
 
+
+#### 1129. Shortest Path with Alternating Colors
+
+```java
+class LC1129 {
+    class Pair {
+        int v;
+        int state; //0: red; 1: blue
+        
+        public Pair(int v, int s) {
+            this.v = v;
+            this.state = s;
+        }
+    }
+    
+    /**
+     *  T: O(V + E)
+     *  S: O(V + E)
+     */
+    public int[] shortestAlternatingPaths(int n, int[][] red_edges, int[][] blue_edges) {
+        int[] ans = new int[n];
+        boolean[] visitedRed = new boolean[n], visitedBlue = new boolean[n];
+        
+        Map<Integer, List<Integer>> red = new HashMap<>();
+        Map<Integer, List<Integer>> blue = new HashMap<>();
+        
+        for (int[] e : red_edges) {
+            red.putIfAbsent(e[0], new ArrayList<>());
+            red.get(e[0]).add(e[1]);
+        }
+        
+        for (int[] e : blue_edges) {
+            blue.putIfAbsent(e[0], new ArrayList<>());
+            blue.get(e[0]).add(e[1]);
+        }
+        
+        //都初始化成-1，走不到的点就保留初始值-1
+        Arrays.fill(ans, -1);
+        
+        Queue<Pair> q = new LinkedList<>();
+
+        //红蓝同时开始一起走
+        q.offer(new Pair(0, 0));
+        q.offer(new Pair(0, 1));
+        
+        visitedRed[0] = true;
+        visitedBlue[0] = true;
+        
+        int step = 0;
+        
+        while (!q.isEmpty()) {
+            int size = q.size();
+            
+            while (size-- > 0) {
+                Pair pair = q.poll();
+                int v = pair.v, state = pair.state;
+
+                ans[v] = ans[v] >= 0 ? Math.min(ans[v], step) : step;
+        
+                //下一次要走的graph 和当前颜色相反
+                Map<Integer, List<Integer>> g = state == 0 ? blue : red;
+
+                //下一次要判断是否visited的点 和当前颜色相反
+                boolean[] visited = state == 0 ? visitedBlue : visitedRed;
+                
+                if (g.get(v) == null) continue;
+                
+                for (int nb : g.get(v)) {
+                    if (visited[nb]) continue;
+                    
+                    visited[nb] = true;
+                    q.offer(new Pair(nb, 1 - state));
+                }
+            }
+            
+            //每层的步数+1
+            step += 1;
+        }
+        
+        return ans;
+    }
+}
+```
 
 
 
@@ -2608,6 +2821,116 @@ class Solution {
     }
 }
 ```
+
+
+
+#### 1319. Number of Operations to Make Network Connected
+
+```java
+class LC1319 {
+    public int makeConnected(int n, int[][] connections) {
+        if (n <= 0 || connections == null || connections.length == 0) return -1;
+        
+        int[] roots = new int[n];
+        boolean[] visited = new boolean[n];
+        
+        for (int i = 0; i < n; i++) {
+            roots[i] = i;
+        }
+        
+        int redundant = 0;
+        
+        for (int[] conn : connections) {
+            int x = conn[0], y = conn[1];
+            
+            visited[x] = true;
+            visited[y] = true;
+            
+            int rootx = find(x, roots);
+            int rooty = find(y, roots);
+            
+            if (rootx == rooty) {
+                redundant += 1;
+            } else {
+                roots[rooty] = rootx;
+            }
+        }
+        
+        int isolated = 0;
+      	//用roots[i] == i算出合并以后孤立的点的个数
+        for (int i = 0; i < n; i++) {
+            if (roots[i] == i) {
+                isolated += 1;
+            }
+        }
+        
+        return redundant >= isolated - 1 ? isolated - 1 : -1;
+    }
+    
+    private int find(int x, int[] roots) {
+        if (x != roots[x]) {
+            roots[x] = find(roots[x], roots);
+        }
+        
+        return roots[x];
+    }
+}
+```
+
+
+
+#### 1202. Smallest String With Swaps
+
+> 用union find将所有连通的字母连接到一起 然后进行排序
+
+```java
+class Solution {
+    public String smallestStringWithSwaps(String s, List<List<Integer>> pairs) {
+        char[] ca = s.toCharArray();
+        int n = ca.length;
+        
+        int[] root = new int[n];
+        
+        for (int i = 0; i < n; i++) {
+            root[i] = i;
+        }
+        
+        for (List<Integer> edge : pairs) {
+            int u = edge.get(0), v = edge.get(1);
+            
+            int rootu = find(root, u);
+            int rootv = find(root, v);
+            
+            root[rootv] = rootu;
+        }
+        
+        Map<Integer, PriorityQueue<Character>> map = new HashMap<>();
+
+        List<Character> rootList = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            int rooti = find(root, i);
+            map.putIfAbsent(rooti, new PriorityQueue<>());
+            map.get(rooti).offer(ca[i]);
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < n; i++) {
+            sb.append(map.get(find(root, i)).poll());
+        }
+        
+        return sb.toString();
+    }
+    
+    private int find(int[] root, int x) {
+        if (root[x] != x) {
+            root[x] = find(root, root[x]);
+        }
+        return root[x];
+    }
+}
+```
+
+
 
 
 

@@ -1,4 +1,4 @@
-class Solution {
+class LC34 {
     public int[] searchRange(int[] nums, int target) {
         int[] res = new int[]{-1, -1};
         if (nums.length == 0) return res;

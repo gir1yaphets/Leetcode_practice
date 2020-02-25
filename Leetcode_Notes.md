@@ -1808,7 +1808,7 @@ class Solution {
 
 #### 40. Combination Sum II  
 
-在39题的基础上去掉重复元素和重复解
+> 在39题的基础上去掉重复元素和重复解
 
 ```java
 class Solution {
@@ -2178,6 +2178,87 @@ class LC486 {
 
 
 
+#### 1215. Stepping Numbers
+
+> 注意num是long 否则越界后重新计数导致TLE
+
+```java
+class LC1215 {
+    private int hi = 0, lo = 0;
+    
+    public List<Integer> countSteppingNumbers(int low, int high) {
+        hi = high;
+        lo = low;
+        
+        List<Integer> res = new ArrayList<>();
+        
+        for (int i = 0; i < 10; i++) {
+            backtrack(i, res);
+        }
+        
+        Collections.sort(res);
+        
+        return res;
+    }
+    
+    private void backtrack(long num, List<Integer> sol) {
+        if (num >= lo && num <= hi) {
+            sol.add((int) num);
+        }
+        
+        if (num == 0 || num > hi) return;
+        
+      	//对最后一位+1, -1进行backtrack
+        int lastDigit = (int) num % 10;
+        long up = num * 10 + lastDigit + 1;
+        long down = num * 10 + lastDigit - 1;
+        
+        if (lastDigit != 0) {
+            backtrack(down, sol);
+        } 
+        
+        if (lastDigit != 9) {
+            backtrack(up, sol);
+        } 
+    }
+}
+```
+
+
+
+#### 320. Generalized Abbreviation
+
+```java
+class LC320 {
+    public List<String> generateAbbreviations(String word) {
+        List<String> res = new ArrayList<>();
+        
+        StringBuilder sb = new StringBuilder();
+        backtrack(word, 0, res, sb, 0);
+        return res;
+    }
+    
+    private void backtrack(String word, int index, List<String> res, StringBuilder curr, int count) {
+        if (index == word.length()) {
+            res.add(curr.append(count > 0 ? count : "").toString());
+            return;
+        }
+        
+        int size = curr.length();
+        
+        //omit charAt(index)
+        backtrack(word, index + 1, res, curr, count + 1);
+        curr.setLength(size);
+        
+        //not omit charAt(index)
+        backtrack(word, index + 1, res, curr.append(count > 0 ? count : "").append(word.charAt(index)), 0);
+        curr.setLength(size);
+    }
+}
+```
+
+
+
 
 
 ### 7. DP
@@ -2325,7 +2406,7 @@ private boolean helper(String s, List<String> wordDict, int start, Boolean[] mem
 
 #### 322. Coin Change 
 
-##### 背包问题
+> 背包问题
 
 dp\[i][j]表示使用前i种不同硬币达到amount的最小数量
 

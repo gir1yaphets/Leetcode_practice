@@ -1,4 +1,4 @@
-class Solution {
+class LC81 {
     /**
      * 最坏时间复杂度是所有元素相等，然后找一个不存在的值 e.g[1,1,1,1,1,1] target = 2
      * O(n)

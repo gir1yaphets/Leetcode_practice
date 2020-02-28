@@ -1,4 +1,4 @@
-class Solution {
+class LC153 {
     public int findMin(int[] nums) {
         int l = 0, r = nums.length - 1;
         int min = Integer.MAX_VALUE;

@@ -2056,6 +2056,126 @@ class LC131 {
 
 
 
+#### 267. Palindrome Permutation II
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+class LC267 {
+    private List<String> sol = new ArrayList<>();
+        
+    public List<String> generatePalindromes(String s) {
+        char[] ca = s.toCharArray();
+        int[] map = new int[256];
+        
+        for (char c : ca) {
+            map[c] += 1;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        
+        //将单数的字符直接append到stringbuider上 因为单数的字符只能出现一次 不存在排列的情况
+        for (int i = 0; i < map.length; i++) {
+            if (map[i] % 2 == 1) {
+                sb.append((char) i);
+            }
+        }
+        
+        if (sb.length() > 1) {
+            return sol;
+        }
+        
+        backtrack(map, sb, ca.length);
+        
+        return sol;
+    }
+    
+    private void backtrack(int[] map, StringBuilder curr, int len) {
+        if (curr.length() == len) {
+            sol.add(curr.toString());
+            return;
+        }
+        
+        for (int i = 0; i < map.length; i++) {
+            if (map[i] > 1) {
+                map[i] -= 2;
+                
+                curr.insert(0, (char) i);
+                curr.append((char) i);
+                
+                backtrack(map, curr, len);
+                
+                curr.deleteCharAt(0);
+                curr.deleteCharAt(curr.length() - 1);
+                
+                map[i] += 2;
+            }
+        }
+    }
+}
+```
+
+
+
+#### 291. Word Pattern II
+
+```java
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+class LC291 {
+    public boolean wordPatternMatch(String pattern, String str) {
+        return backtrack(str, pattern, 0, 0, new HashMap<>(), new HashSet<>());
+    }
+    
+    private boolean backtrack(String str, String pattern, int indexS, int indexP, Map<Character, String> map, Set<String> set) {
+        if (indexS == str.length() && indexP == pattern.length()) return true;
+        
+        if (indexS == str.length() || indexP == pattern.length()) return false;
+        
+        char c = pattern.charAt(indexP);
+        //pattern中的当前字符之前已经匹配了一个string，该再次出现判断是否和之前出现的一样
+        if (map.containsKey(c)) {
+            String mapping = map.get(c);
+            
+            if (!str.startsWith(mapping, indexS)) {
+                return false;
+            }
+            
+            return backtrack(str, pattern, indexS + mapping.length(), indexP + 1, map, set);
+        }
+        
+        //pattern中没出现过该字符，开始一个个尝试
+        for (int i = indexS; i < str.length(); i++) {
+            String trying = str.substring(indexS, i + 1);
+            
+            //为了避免a->red,b->red的情况，如果red已经map给了a，则不让b不再map到red
+            if (set.contains(trying)) {
+                continue;
+            }
+            
+            set.add(trying);
+            map.put(c, trying);
+            
+            if (backtrack(str, pattern, i + 1, indexP + 1, map, set)) {
+                return true;
+            }
+            
+            set.remove(trying);
+            map.remove(c);
+        }
+        
+        return false;
+    }
+}
+```
+
+
+
+
+
 #### 464. Can I Win
 
 ```java
@@ -2178,6 +2298,57 @@ class LC486 {
 
 
 
+#### 842. Split Array into Fibonacci Sequence
+
+```java
+class LC842 {
+    public List<Integer> splitIntoFibonacci(String S) {
+        List<Integer> res = new ArrayList<>();
+        backtrack(S, 0, res);
+        return res;
+    }
+    
+    private boolean backtrack(String s, int start, List<Integer> sol) {
+        if (start == s.length() && sol.size() >= 3) return true;
+        
+        for (int i = start; i < s.length(); i++) {
+            if (i > start && s.charAt(start) == '0') {
+                continue;
+            }
+            
+            int num = 0;
+            
+            try {
+                num = Integer.parseInt(s.substring(start, i + 1));
+            } catch (Exception e) {
+                break;
+            }
+            
+            int size = sol.size();
+            
+            if (size >= 2 && num > sol.get(size - 1) + sol.get(size - 2)) {
+                return false;
+            }
+            
+            if (size < 2 || num == sol.get(size - 1) + sol.get(size - 2)) {
+                sol.add((int) num);
+                if (backtrack(s, i + 1, sol)) {
+                    return true;
+                }
+                
+                sol.remove(sol.size() - 1);
+            }
+        }
+        
+        return false;
+    }
+}
+```
+
+
+
+
+
 #### 1215. Stepping Numbers
 
 > 注意num是long 否则越界后重新计数导致TLE
@@ -2223,6 +2394,46 @@ class LC1215 {
     }
 }
 ```
+
+
+
+#### 1291. Sequential Digits
+
+> 和1215. Stepping Numbers基本一样
+
+```java
+class LC1291 {
+    private List<Integer> res = new ArrayList<>();
+    
+    public List<Integer> sequentialDigits(int low, int high) {
+        for (int i = 0; i <= 9; i++) {
+            backtrack(low, high, i);
+        }
+        
+        Collections.sort(res);
+        
+        return res;
+    }
+    
+    private void backtrack(int lo, int hi, int curr) {
+        if (curr >= lo && curr <= hi) {
+            res.add(curr);
+        }
+        
+        if (curr > hi || curr == 0) {
+            return;
+        }
+        
+        int last = curr % 10;
+        if (last + 1 < 10) {
+            int up = curr * 10 + last + 1;
+            backtrack(lo, hi, up);
+        }
+    }
+}
+```
+
+
 
 
 

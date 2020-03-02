@@ -1431,6 +1431,64 @@ class Solution {
 
 
 
+#### 1219. Path with Maximum Gold
+
+> 不能用bfs+pq做, 因为没有办法知道pq重新开始新起点以后的值
+>
+> 用dfs统计出在当前节点的4个方向上每个方向能走到的最大值
+
+```java
+class LC1219 {
+    private int[][] dir = {
+        {1, 0},
+        {-1, 0},
+        {0, 1},
+        {0, -1}
+    };
+    
+    public int getMaximumGold(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        int max = 0;
+        Set<Integer> visited = new HashSet<>();
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == 0 || visited.contains(i * n + j)) continue;
+                
+                max = Math.max(max, dfs(grid, i, j, visited));
+            }
+        }
+        
+        return max;
+    }
+    
+    private int dfs(int[][] grid, int startx, int starty, Set<Integer> visited) {
+        int count = grid[startx][starty];
+        int m = grid.length, n = grid[0].length;
+        visited.add(startx * n + starty);
+        
+        int max = 0;
+        for (int[] d : dir) {
+            int x = startx + d[0], y = starty + d[1];
+            
+            if (x < 0 || y < 0 || x >= m || y >= n || grid[x][y] == 0 || visited.contains(x * n + y)) {
+                continue;
+            }
+            
+            max = Math.max(dfs(grid, x, y, visited), max);
+        }
+        
+        visited.remove(startx * n + starty);
+        
+        return count + max;
+    }
+}
+```
+
+
+
+
+
 ### 5. BFS
 
 ---
@@ -2347,6 +2405,65 @@ class LC842 {
 
 
 
+#### 980. Unique Paths III
+
+> *O*(4^(*R*∗*C*)), where R,C*R*,*C* .are the number of rows and columns in the grid
+
+```java
+class LC980 {
+    private int[] d = {0, 1, 0, -1, 0};
+    private int zero = 1; //最后走到2的时候会多加一个1 所以zero也要多1和num比较
+    private int res = 0;
+    
+    public int uniquePathsIII(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        int startx = 0, starty = 0;
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == 1) {
+                    startx = i;
+                    starty = j;
+                } else if (grid[i][j] == 0) {
+                    zero += 1;
+                }
+            }
+        }
+        
+        dfs(grid, startx, starty, 0);
+        
+        return res;
+    }
+    
+    private void dfs(int[][] grid, int r, int c, int num) {
+        if (grid[r][c] == 2) {
+            if (num == zero) {
+                res += 1;
+            }
+
+            return;
+        }
+        
+        int org = grid[r][c];
+        grid[r][c] = -2;
+        
+        for (int i = 0; i < 4; i++) {
+            int x = r + d[i], y = c + d[i+1];
+            
+            if (x < 0 || y < 0 || x >= grid.length || y >= grid[0].length || grid[x][y] == -1 || grid[x][y] == -2) {
+                continue;
+            }
+            
+            dfs(grid, x, y, num + 1);
+        }
+        
+        grid[r][c] = org;
+    }
+}
+```
+
+
+
 
 
 #### 1215. Stepping Numbers
@@ -2394,6 +2511,73 @@ class LC1215 {
     }
 }
 ```
+
+
+
+#### 1258. Synonymous Sentences
+
+> 当遇到同义词的时候用graph dfs将同义词找到存到list里，然后对其进行backtrack
+
+```java
+class LC1258 {
+    private Map<String, List<String>> g = new HashMap<>();
+    private String[] words;
+    private List<String> res = new ArrayList<>();
+    
+    public List<String> generateSentences(List<List<String>> synonyms, String text) {
+        buildGraph(synonyms);
+        
+        words = text.split(" ");
+        
+        dfs(0, "");
+        Collections.sort(res);
+        return res;
+    }
+    
+    private void buildGraph(List<List<String>> sy) {
+        for (List<String> item : sy) {
+            String u = item.get(0), v = item.get(1);
+            g.putIfAbsent(u, new ArrayList<>());
+            g.putIfAbsent(v, new ArrayList<>());
+            
+            g.get(u).add(v);
+            g.get(v).add(u);
+        }
+    }
+    
+    private void dfs(int index, String curr) {
+        if (index == words.length) {
+            res.add(curr);
+            return;
+        }
+        String word = words[index];
+
+        if (g.containsKey(word) && g.get(word) != null) {
+            List<String> chain = new ArrayList<>();
+            dfsGraph(word, new HashSet<>(), chain);
+            
+            for (String s : chain) {
+                dfs(index + 1, curr + (index == 0 ? s : " " + s));
+            }
+        } else {
+            curr += (index == 0 ? word : " " + word);
+            dfs(index + 1, curr);
+        }
+    }
+    
+    private void dfsGraph(String word, Set<String> visited, List<String> chain) {
+        if (visited.contains(word)) return;
+        visited.add(word);
+        chain.add(word);
+            
+        for (String nb : g.get(word)) {
+            dfsGraph(nb, visited, chain);
+        }
+    }
+}
+```
+
+
 
 
 

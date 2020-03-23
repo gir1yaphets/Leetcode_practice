@@ -412,6 +412,49 @@ class LC236 {
 
 
 
+#### 250. Count Univalue Subtrees
+
+```java
+class Solution {
+    private int count = 0;
+    
+    public int countUnivalSubtrees(TreeNode root) {
+        helper(root);
+        return count;
+    }
+    
+    private boolean helper(TreeNode root) {
+        if (root == null) {
+            return true;
+        }
+        
+        //如果是叶子节点的话该节点一定是uni value, count++
+        if (root.left == null && root.right == null) {
+            count += 1;
+            return true;
+        }
+        
+        boolean left = helper(root.left);
+        boolean right = helper(root.right);
+        
+        //如果左子树或者右子树并不是uni value的，那么当前节点一定不是，直接返回false
+        if (!left || !right) {
+            return false;
+        }
+        
+        //当前节点和左右节点值不相同的时候不是uni value
+        if (root.left != null && root.left.val != root.val || root.right != null && root.right.val != root.val) {
+            return false;
+        }
+        
+        count += 1;
+        return true;
+    }
+}
+```
+
+
+
 #### 366. Find Leaves of Binary Tree
 
 bottom-up计数问题
@@ -872,43 +915,174 @@ private int helper(TreeNode root, int val) {
 
 
 
-#### 250. Count Univalue Subtrees
+#### 776.  Split BST ★
 
 ```java
-class Solution {
-    private int count = 0;
+class LC776 {
+    public TreeNode[] splitBST(TreeNode root, int V) {
+        if (root == null) {
+            //[SmallorEqual, Large]
+            return new TreeNode[]{null, null};
+        }
+        
+        //目标值小于当前节点的值，切割左子树
+        if (V < root.val) {
+            TreeNode[] res = splitBST(root.left, V);
+            //root是大的一边，所以需要连接上被切割的大的一边的子树，而大的一边的子树就存在res[1]中
+            root.left = res[1];
+            //因为当前root是大的一遍 所以赋值给res[1]
+            res[1] = root;
+            return res;
+        } else { //目标值大于等于当前节点的值，切割右子树
+            TreeNode[] res = splitBST(root.right, V);
+            //因为要将小于等于的放到res[0]，所以else表示的是root.val <= V
+            root.right = res[0];
+            res[0] = root;
+            return res;
+        }
+    }
+}
+```
+
+
+
+#### 958. Check Completeness of a Binary Tree
+
+```java
+class LC958 {
+    public boolean isCompleteTree(TreeNode root) {
+        if (root == null) return true;
+        
+        //For a complete binary tree, there should not be any node after we met an empty one.
+        boolean hasEmptyNode = false;
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+        
+        while (!q.isEmpty()) {
+            int size = q.size();
+            
+            for (int i = 0; i < size; i++) {
+                TreeNode node = q.poll();
+                
+                if (node != null) {
+                    if (!hasEmptyNode) {
+                        q.offer(node.left);
+                        q.offer(node.right);
+                    } else {
+                        //之前有过空节点，则一定不是完全二叉树
+                        return false;
+                    }
+                } else {
+                    //第一次遇到空节点的时候记录flag
+                    hasEmptyNode = true;
+                }
+            }
+        }
+        
+        return true;
+    }
+}
+```
+
+
+
+#### 1108. Construct Binary Search Tree from Preorder Traversal
+
+```java
+class LC1008 {
+    //index需要是全局的，如果是局部变量当不满足上下界的时候index会被回溯回去
+    private int index = 0;
     
-    public int countUnivalSubtrees(TreeNode root) {
-        helper(root);
-        return count;
+    public TreeNode bstFromPreorder(int[] preorder) {
+        return helper(preorder, Integer.MAX_VALUE, Integer.MIN_VALUE);
     }
     
-    private boolean helper(TreeNode root) {
+    private TreeNode helper(int[] preorder, int upper, int lower) {
+        if (index == preorder.length) {
+            return null;
+        }
+        
+        int currVal = preorder[index];
+        
+       	//如果当前的val不在上下界中，不再继续往深走
+        if (currVal < lower || currVal > upper) {
+            return null;
+        }
+        
+        TreeNode root = new TreeNode(currVal);
+        
+        index += 1;
+        //往左边走更新上界，往右边走更新下界
+        root.left = helper(preorder, currVal, lower);
+        root.right = helper(preorder, upper, currVal);
+        
+        return root;
+    }
+}
+```
+
+
+
+#### 1026. Maximum Difference Between Node and Ancestor ★
+
+```java
+class LC1026 {
+    public int maxAncestorDiff(TreeNode root) {
+        if (root == null) return 0;
+        
+        return helper(root, root.val, root.val);
+    }
+    
+    private int helper(TreeNode root, int max, int min) {
+        //每次走到根节点的时候统计这条路径上的最大最小值的差
         if (root == null) {
-            return true;
+            return max - min;
+        }        
+        
+        max = Math.max(max, root.val);
+        min = Math.min(min, root.val);
+        
+        int leftDiff = helper(root.left, max, min);
+        int rightDiff = helper(root.right, max, min);
+        
+        //将左右子树差值的最大值返回给上层
+        return Math.max(leftDiff, rightDiff);
+    }
+}
+```
+
+
+
+
+
+#### 1123. Lowest Common Ancestor of Deepest Leaves
+
+```java
+class LC1123 {
+    private int maxDepth = 0;
+    private TreeNode lca = null;
+    
+    public TreeNode lcaDeepestLeaves(TreeNode root) {
+        helper(root, 0);
+        return lca;
+    }
+    
+    private int helper(TreeNode root, int level) {
+        maxDepth = Math.max(maxDepth, level);
+        
+        if (root == null) {
+            return level;
         }
         
-        //如果是叶子节点的话该节点一定是uni value, count++
-        if (root.left == null && root.right == null) {
-            count += 1;
-            return true;
+        int leftDepth = helper(root.left, level + 1);
+        int rightDepth = helper(root.right, level + 1);
+        
+        //如果存在某一个节点 左子树的最大深度=右子树的最大深度=整个树的最大深度 那么该点就是最深叶子节点的common ancester
+        if (leftDepth == maxDepth && rightDepth == maxDepth) {
+            lca = root;
         }
         
-        boolean left = helper(root.left);
-        boolean right = helper(root.right);
-        
-        //如果左子树或者右子树并不是uni value的，那么当前节点一定不是，直接返回false
-        if (!left || !right) {
-            return false;
-        }
-        
-        //当前节点和左右节点值不相同的时候不是uni value
-        if (root.left != null && root.left.val != root.val || root.right != null && root.right.val != root.val) {
-            return false;
-        }
-        
-        count += 1;
-        return true;
+        return Math.max(leftDepth, rightDepth);
     }
 }
 ```

@@ -883,6 +883,42 @@ class Solution {
 
 
 
+#### 652. Find Duplicate Subtrees ★
+
+> Tree序列化
+
+```java
+class LC652 {
+    private Map<String, Integer> map = new HashMap<>();
+    private List<TreeNode> res = new ArrayList<>();
+    
+    public List<TreeNode> findDuplicateSubtrees(TreeNode root) {
+        dfs(root);
+        
+        return res;
+    }
+    
+    private String dfs(TreeNode root) {
+        if (root == null) return "#";
+        
+        String serial = root.val + "-" + dfs(root.left) + "-" + dfs(root.right);
+        
+        map.put(serial, map.getOrDefault(serial, 0) + 1);
+        
+        if (map.get(serial) == 2) {
+            res.add(root);
+        }
+        
+        return serial;
+    }
+    
+}
+```
+
+
+
+
+
 #### 687. Longest Univalue Path   
 
 > 有相同值节点的最长路径，不需要过root
@@ -943,6 +979,79 @@ class LC776 {
     }
 }
 ```
+
+
+
+#### 863. All Nodes Distance K in Binary Tree ★
+
+```java
+class LC863 {
+    private Map<TreeNode, Integer> map = new HashMap<>();
+    
+    public List<Integer> distanceK(TreeNode root, TreeNode target, int K) {
+        List<Integer> res = new ArrayList<>();
+        find(root, target);
+        helper(root, map.get(root), K, res);
+        return res;
+    }
+    
+    /**
+		 * 将target节点标记为level 0, 然后将其上面的父亲节点的level依次标记为level + 1, 其下面的节点不用标记, 因为下面的节点是和目标节点在同一个path上面，dfs过程中可以直接算出来
+     * @param root
+     * @param target
+     * @return
+     */
+    private int find(TreeNode root, TreeNode target) {
+        if (root == null) {
+            return -1;
+        }
+        
+        if (root == target) {
+            map.put(root, 0);
+            return 0;
+        }
+        
+        int left = find(root.left, target);
+        if (left >= 0) {
+            map.put(root, left + 1);
+            //return 当前节点离目标节点的距离
+            return left + 1;
+        }
+        
+        int right = find(root.right, target);
+        if (right >= 0) {
+            map.put(root, right + 1);
+            return right + 1;
+        }
+        
+        return -1;
+    }
+    
+    /**
+     * 如果该节点存在于map中，则直接取该节点相对于target节点的距离，否则用之前取过的距离+1
+     *      1
+     *    /  \
+     *   2   3
+     * 如果2是target节点 那么1存在于map中 level就是1
+     * 3不在map中，用1的level + 1，所以3距离2的距离就是2
+     */
+    private void helper(TreeNode root, int level, int K, List<Integer> res) {
+        if (root == null) return;
+        if (map.containsKey(root)) {
+            level = map.get(root);
+        }
+        
+        if (level == K) {
+            res.add(root.val);
+        }
+        
+        helper(root.left, level + 1, K, res);
+        helper(root.right, level + 1, K, res);
+    }
+}
+```
+
+
 
 
 
@@ -1145,6 +1254,83 @@ class Solution {
     }
 }
 ```
+
+
+
+#### 1245. Tree Diameter
+
+```java
+/**
+ * 从任意一点出发，走到最远的点，该点一定在最长的路径上(don"t know why...)
+ */
+class LC1245 {
+    private Map<Integer, List<Integer>> g = new HashMap<>();
+    
+    public int treeDiameter(int[][] edges) {
+        int n = edges.length;
+        if (n < 0) return 0;
+        
+        buildGraph(edges);
+        
+        //先从任意的0点开始，找到最远的点
+        int farestNode = bfs(n, 0).get(0);
+        //再从该点出发找最远的路径
+        return bfs(n, farestNode).get(1);
+    }
+    
+    private void buildGraph(int[][] edges) {
+        for (int[] e : edges) {
+            int u = e[0], v = e[1];
+            
+            g.putIfAbsent(u, new ArrayList<>());
+            g.putIfAbsent(v, new ArrayList<>());
+            
+            g.get(u).add(v);
+            g.get(v).add(u);
+        }
+    }
+    
+    private List<Integer> bfs(int n, int start) {
+        int[] distance = new int[n + 1];
+        Arrays.fill(distance, -1);
+        
+        Queue<Integer> q = new LinkedList<>();
+        q.offer(start);
+        distance[start] = 0;
+        
+        while (!q.isEmpty()) {
+            int v = q.poll();
+            
+            if (!g.containsKey(v)) continue;
+            
+            for (int nb : g.get(v)) {
+                if (distance[nb] == -1) {
+                    q.offer(nb);
+                    distance[nb] = distance[v] + 1;
+                }
+            }
+        }
+        
+        int p = 0;
+        int max = 0;
+        
+        for (int i = 0; i < distance.length; i++) {
+            if (distance[i] > max) {
+                max = distance[i];
+                p = i;
+            }
+        }
+        
+        List<Integer> res = new ArrayList<>();
+        res.add(p);
+        res.add(max);
+        
+        return res;
+    }
+}
+```
+
+
 
 
 

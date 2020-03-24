@@ -18,7 +18,7 @@ class LC863 {
     }
     
     /**
-     * 将target节点标记为level 0, 然后将其上面的父亲节点的level依次标记为level + 1, 其下面的节点不用标记
+     * 将target节点标记为level 0, 然后将其上面的父亲节点的level依次标记为level + 1, 其下面的节点不用标记, 因为下面的节点是和目标节点在同一个path上面，dfs过程中可以直接算出来
      * @param root
      * @param target
      * @return
@@ -36,6 +36,7 @@ class LC863 {
         int left = find(root.left, target);
         if (left >= 0) {
             map.put(root, left + 1);
+            //return 当前节点离目标节点的距离
             return left + 1;
         }
         

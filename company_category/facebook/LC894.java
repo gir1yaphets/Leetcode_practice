@@ -23,6 +23,7 @@ class LC894 {
         for (int i = 1; i < N; i += 2) {
             //枚举所有左子树和右子树
             for (TreeNode leftTree : allPossibleFBT(i)) {
+                //左子树i个，根节点1个，所以右子树N-i-1
                 for (TreeNode rightTree : allPossibleFBT(N - i - 1)) {
                     TreeNode root = new TreeNode(0);
                     root.left = leftTree;

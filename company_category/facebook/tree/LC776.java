@@ -7,6 +7,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
+package tree;
 class LC776 {
     public TreeNode[] splitBST(TreeNode root, int V) {
         if (root == null) {

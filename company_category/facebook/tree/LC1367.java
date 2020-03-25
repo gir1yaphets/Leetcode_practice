@@ -1,3 +1,4 @@
+package tree;
 class LC1367 {
     public boolean isSubPath(ListNode head, TreeNode root) {
         return dfs(head, root);

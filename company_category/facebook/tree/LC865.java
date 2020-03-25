@@ -7,6 +7,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
+package tree;
 class LC865 {
     private int max = 0;
     private TreeNode res = null;

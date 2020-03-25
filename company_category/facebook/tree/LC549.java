@@ -1,3 +1,4 @@
+package tree;
 class LC549 {
     private int max = 0;
     

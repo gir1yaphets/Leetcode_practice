@@ -1,3 +1,4 @@
+package tree;
 class LC1008 {
     private int index = 0;
 

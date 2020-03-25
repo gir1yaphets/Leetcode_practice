@@ -1,3 +1,4 @@
+package tree;
 import java.util.*;
 class LC958 {
     public boolean isCompleteTree(TreeNode root) {

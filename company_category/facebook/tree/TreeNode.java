@@ -1,4 +1,4 @@
- //Definition for a binary tree node.
+package tree;
  public class TreeNode {
      int val;
      TreeNode left;

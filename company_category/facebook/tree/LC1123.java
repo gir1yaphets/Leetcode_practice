@@ -7,6 +7,7 @@
  *     TreeNode(int x) { val = x; }
  * }
  */
+package tree;
 class LC1123 {
     private int maxDepth = 0;
     private TreeNode lca = null;

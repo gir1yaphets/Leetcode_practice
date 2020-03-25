@@ -1,3 +1,4 @@
+package tree;
 import java.util.*;
 /**
  *  这道题的意思是交换左子树和右子树能满足match voyage，并且将被交换子树的父节点输出

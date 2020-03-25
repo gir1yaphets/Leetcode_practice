@@ -883,6 +883,57 @@ class Solution {
 
 
 
+#### 549. Binary Tree Longest Consecutive Sequence II ★
+
+```java
+class LC549 {
+    private int max = 0;
+    
+    public int longestConsecutive(TreeNode root) {
+        helper(root);
+        return max;
+    }
+    
+    private int[] helper(TreeNode root) {
+        if (root == null) {
+            //[incre, decre]
+            return new int[]{0, 0};
+        }
+        
+        int incre = 1, decre = 1;
+        
+        int[] left = helper(root.left);
+        
+        if (root.left != null) {
+            if (root.left.val == root.val + 1) {
+                incre = left[0] + 1;
+            } else if (root.left.val == root.val - 1) {
+                decre = left[1] + 1;
+            }
+        }
+        
+        
+        int[] right = helper(root.right);
+        
+        if (root.right != null) {
+            if (root.right.val == root.val + 1) {
+                incre = Math.max(right[0] + 1, incre);
+            } else if (root.right.val == root.val - 1) {
+                decre = Math.max(right[1] + 1, decre);
+            }
+        }
+        
+        max = Math.max(max, incre + decre - 1);
+        
+        return new int[]{incre, decre};
+    }
+}
+```
+
+
+
+
+
 #### 652. Find Duplicate Subtrees ★
 
 > Tree序列化
@@ -912,6 +963,66 @@ class LC652 {
         return serial;
     }
     
+}
+```
+
+
+
+#### 662. Maximum Width of Binary Tree
+
+```java
+import java.util.*;
+
+class Solution {
+    class Node {
+        TreeNode treeNode;
+        int pos;
+        int depth;
+        
+        public Node(TreeNode n, int p, int d) {
+            treeNode = n;
+            pos = p;
+            depth = d;
+        }
+    }
+    
+    public int widthOfBinaryTree(TreeNode root) {
+        if (root == null) return 0;
+        
+        Queue<Node> q = new LinkedList<>();
+        q.offer(new Node(root, 0, 0));
+        int left = 0, currDepth = 0;
+        int res = 0;
+        
+        while (!q.isEmpty()) {
+            int size = q.size();
+
+            for (int i = 0; i < size; i++) {
+                Node node = q.poll();
+                int pos = node.pos;
+                int depth = node.depth;
+
+                if (node.treeNode.left != null) {
+                    q.offer(new Node(node.treeNode.left, 2 * pos, depth + 1));
+                }
+
+                if (node.treeNode.right != null) {
+                    q.offer(new Node(node.treeNode.right, 2 * pos + 1, depth + 1));
+                }
+                
+                //第一次更新depth的节点一定是最左边的节点
+                if (depth > currDepth) {
+                    currDepth = depth;
+                    left = pos;
+                }
+                
+                //最后一个节点是最右边的节点
+                res = Math.max(res, pos - left + 1);
+            }
+        }
+        
+        return res;
+    }
 }
 ```
 
@@ -1053,6 +1164,51 @@ class LC863 {
 
 
 
+#### 894. All Possible Full Binary Trees ★
+
+```java
+class LC894 {
+    private Map<Integer, List<TreeNode>> cache = new HashMap<>();
+    
+    public List<TreeNode> allPossibleFBT(int N) {
+        if (cache.containsKey(N)) {
+            return cache.get(N);
+        }
+        
+        List<TreeNode> res = new ArrayList<>();
+        
+        if (N % 2 == 0) {
+            return res;
+        }
+        
+        if (N == 1) {
+            res.add(new TreeNode(0));
+            return res;
+        }
+        
+        //以为N只能是偶数才有可能构成full binary tree, 所以N从1开始m i += 2
+        for (int i = 1; i < N; i += 2) {
+            //枚举所有左子树和右子树
+            for (TreeNode leftTree : allPossibleFBT(i)) {
+                //左子树i个，根节点1个，所以右子树N-i-1
+                for (TreeNode rightTree : allPossibleFBT(N - i - 1)) {
+                    TreeNode root = new TreeNode(0);
+                    root.left = leftTree;
+                    root.right = rightTree;
+                    
+                    res.add(root);
+                }
+            }
+        }
+        
+        cache.put(N, res);
+        return res;
+    }
+}
+```
+
+
+
 
 
 #### 958. Check Completeness of a Binary Tree
@@ -1092,6 +1248,48 @@ class LC958 {
     }
 }
 ```
+
+
+
+#### 971. Flip Binary Tree To Match Preorder Traversal
+
+```java
+/**
+ *  这道题的意思是交换左子树和右子树能满足match voyage，并且将被交换子树的父节点输出
+ */
+class LC971 {
+    private int index = 0;
+    private List<Integer> res = new ArrayList<>();
+    
+    public List<Integer> flipMatchVoyage(TreeNode root, int[] voyage) {
+        dfs(root, voyage);
+        
+        return res;
+    }
+    
+    private boolean dfs(TreeNode root, int[] v) {
+        if (root == null) return true;
+        
+        //先判断当前节点和对应index的值是否相等，如果不等直接返回false，以为之前不等的时候已经左了交换，如果交换完还不相等则肯定无法match
+        if (root.val != v[index]) {
+            res = Arrays.asList(-1);
+            return false;
+        }
+        
+        index += 1;
+        
+        //如果左子树节点值和下一个不等，则需要在这个几点将其左子树和右子树交换，即先遍历右子树再遍历左子树
+        if (root.left != null && root.left.val != v[index]) {
+            res.add(root.val);
+            return dfs(root.right, v) && dfs(root.left, v);
+        }
+        
+        return dfs(root.left, v) && dfs(root.right, v);
+    }
+}
+```
+
+
 
 
 

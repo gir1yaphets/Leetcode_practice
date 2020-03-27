@@ -2044,6 +2044,153 @@ class LC490 {
 
 
 
+#### 721. Accounts Merge ★
+
+```java
+class LC721 {
+    private Map<String, Set<String>> g = new HashMap<>();
+    private Map<String, String> emailToName = new HashMap<>();
+    private Set<String> emails = new HashSet<>();
+    
+    public List<List<String>> accountsMerge(List<List<String>> accounts) {
+        List<List<String>> res = new ArrayList<>();
+        
+        if (accounts == null || accounts.size() == 0) return res;
+        
+        Set<String> visited = new HashSet<>();
+        
+        buildGraph(accounts);
+        
+        for (String e : emails) {
+            List<String> related = new ArrayList<>();
+            dfs(e, visited, related);
+            
+            Collections.sort(related);
+            
+            if (related.size() > 0) {
+                List<String> account = new ArrayList<>();
+                String name = emailToName.get(e);
+                account.add(name);
+                account.addAll(related);
+
+                res.add(account);
+            }
+        }
+        
+        return res;
+    }
+    
+    private void dfs(String start, Set<String> visited, List<String> related) {
+        if (visited.contains(start)) return;
+        
+        visited.add(start);
+        related.add(start);
+        
+        if (g.get(start) != null) {
+            for (String nb : g.get(start)) {
+                dfs(nb, visited, related);
+            }
+        }
+    }
+    
+    private void buildGraph(List<List<String>> accounts) {
+        for (List<String> acc : accounts) {
+            String name = acc.get(0);
+            for (int i = 1; i < acc.size(); i++) {
+                emails.add(acc.get(i));
+                emailToName.put(acc.get(i), name);
+                
+                if (i == 1) continue;
+                    
+                String first = acc.get(i-1), second = acc.get(i);
+                g.putIfAbsent(first, new HashSet<>());
+                g.putIfAbsent(second, new HashSet<>());
+                
+                g.get(first).add(second);
+                g.get(second).add(first);
+            }
+        }
+    }
+
+
+    /**
+     * Union Find
+     * 将不同的account根据email合并到一起
+     */
+    public List<List<String>> accountsMergeUf(List<List<String>> accounts) {
+        List<List<String>> res = new ArrayList<>();
+        
+        if (accounts == null || accounts.size() == 0) return res;
+        
+        int n = accounts.size();
+        
+        int[] root = new int[n];
+        
+        for (int i = 0; i < n; i++) {
+            root[i] = i;
+        }
+        
+        Map<String, Integer> emailToAccIndex = new HashMap<>();
+        
+        for (int i = 0; i < n; i++) {
+            List<String> acc = accounts.get(i);
+            for (int j = 1; j < acc.size(); j++) {
+                String email = acc.get(j);
+                
+                //如果map中已经包含了这个email，则将两个account的index进行合并
+                if (emailToAccIndex.containsKey(email)) {
+                    int preIndex = emailToAccIndex.get(email);
+                    
+                    //将两个account的index进行合并
+                    union(preIndex, i, root);
+                } else {
+                    emailToAccIndex.put(email, i);
+                }
+            }
+        }
+        
+        Map<Integer, Set<String>> emailSet = new HashMap<>();
+             
+        for (int i = 0; i < n; i++) {
+            //因为将不同的email根据index已经进行了合并，所以此处find的index就是同一个account的index，并将这些email都加到同一个set总
+            int index = find(i, root);
+            
+            emailSet.putIfAbsent(index, new HashSet<>());
+            
+            for (int j = 1; j < accounts.get(i).size(); j++) {
+                emailSet.get(index).add(accounts.get(i).get(j));
+            }
+        }
+        
+        for (int index : emailSet.keySet()) {
+            List<String> item = new ArrayList<>();
+            item.add(accounts.get(index).get(0));
+            
+            List<String> emailList = new ArrayList<>(emailSet.get(index));
+            Collections.sort(emailList);
+            item.addAll(emailList);
+            res.add(item);
+        }
+        
+        return res;
+    }
+    
+    private int find(int x, int[] root) {
+        if (x != root[x]) {
+            root[x] = find(root[x], root);
+        }
+        
+        return root[x];
+    }
+    
+    private void union(int x, int y, int[] root) {
+        root[find(x, root)] = root[find(y, root)];
+    }
+} 
+```
+
+
+
 
 
 #### 1219. Path with Maximum Gold
@@ -4031,6 +4178,96 @@ class LC523 {
 ### 8. Union Find
 
 ---
+
+#### 839. Similar String Groups
+
+```java
+class LC839 {
+    public int numSimilarGroups(String[] A) {
+        if (A == null || A.length == 0) return 0;
+        int n = A.length;
+        
+        UF uf = new UF(n);
+        
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (isSimilar(A[i], A[j])) {
+                    uf.union(i, j);
+                }
+            }
+        }
+        
+        return uf.n;
+    }
+    
+    class UF {
+        int[] root;
+        int[] rank;
+        int n;
+        
+        public UF(int n) {
+            this.n = n;
+            
+            rank = new int[n];
+            root = new int[n];
+            for (int i = 0; i < n; i++) {
+                root[i] = i;
+            }
+        }
+        
+        private int find(int x) {
+            if (x != root[x]) {
+                root[x] = find(root[x]);
+            }
+
+            return root[x];
+        }
+
+        private void union(int x, int y) {
+            int rootx = find(x);
+            int rooty = find(y);
+
+            if (rootx == rooty) {
+                return;
+            }
+
+            if (rank[rootx] < rank[rooty]) {
+                root[rootx] = rooty;
+            } else {
+                root[rooty] = rootx;
+            }
+            
+            if (rank[rootx] == rank[rooty]) {
+                rank[rootx] += 1;
+            }
+            
+            n -= 1;
+        }
+    }
+    
+    
+    private boolean isSimilar(String a, String b) {
+        if (a.equals(b)) return true;
+        
+        int n = a.length();
+        
+        char[] ar = a.toCharArray(), br = b.toCharArray();
+        int diff = 0;
+        
+        for (int i = 0; i < n; i++) {
+            if (ar[i] != br[i]) {
+                if (++diff > 2) return false;
+            }
+        }
+        
+        return true;
+    }
+}
+```
+
+
+
+
 
 #### 1135. Connecting Cities With Minimum Cost
 

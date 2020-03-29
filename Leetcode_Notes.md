@@ -2256,6 +2256,334 @@ class LC1219 {
 
 ---
 
+#### 126. Word Ladder II ★
+
+> BFS+DFS+backtrack
+
+```java
+/**
+ * 1. 先用bfs从begin开始到end过程中所有经过的word标记距离，记录在dist中
+ * 2. 用dfs从从begin开始，每次找dist中距离当前word为1的neighbor进行搜索，当到达end的时候记录一条有效路径，然后在backtrack
+ */
+class LC126 {
+    private Map<String, Integer> dist = new HashMap<>();
+    private Map<String, List<String>> g = new HashMap<>();
+    private List<List<String>> res = new ArrayList<>();
+    
+    public List<List<String>> findLadders(String beginWord, String endWord, List<String> wordList) {
+        if (wordList == null || wordList.size() == 0) return res;
+        
+        Set<String> dict = new HashSet<>(wordList);
+        dict.add(beginWord);
+
+        /** 提前将dict中所有的word都进行查找neighbors,然后将其加入到g中
+         *  这样会导致一些无法从begin到达的word也被加入到了g中，所以在dfs过程中还需要判断dist.get(nb) != null,因为所有的word不一定在dist的map中
+            g.put(beginWord, getNeighbors(beginWord, dict));
+            
+            for (String w : wordList) {
+                g.put(w, getNeighbors(w, dict));
+            }
+        */
+
+        if (bfs(beginWord, endWord)) {
+            dfs(beginWord, endWord, new ArrayList<>());
+        }
+         
+        
+        return res;
+    }
+    
+    private boolean bfs(String begin, String end, Set<String> dict) {
+        Queue<String> q = new LinkedList<>();
+        q.offer(begin);
+        dist.put(begin, 0);
+        
+        while (!q.isEmpty()) {
+            int size = q.size();
+            
+            for (int i = 0; i < size; i++) {
+                String curr = q.poll();
+                
+                if (curr.equals(end)) return true;
+                
+                int d = dist.get(curr);
+
+                //只将在bfs过程中可以达到的词进行查找neighbor并且加入到g中，其它词不需要管
+                List<String> neighbors = getNeighbors(curr, dict);
+                g.get(curr).addAll(neighbors);
+                
+                for (String nb : g.get(curr)) {
+                    if (!dist.containsKey(nb)) {
+                        q.offer(nb);
+                        dist.put(nb, d + 1);
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    private void dfs(String start, String end, List<String> path) {
+        path.add(start);
+        
+        if (start.equals(end)) {
+            res.add(new ArrayList<>(path));
+        } else {
+            for (String nb : g.get(start)) {
+                //只加如可以到到达的词就不需要判断 dist.get(nb) != null
+                if (dist.get(nb) == dist.get(start) + 1) {
+                    dfs(nb, end, path);
+                }
+            }
+        }
+        
+        path.remove(path.size() - 1);
+    }
+    
+    private List<String> getNeighbors(String s, Set<String> dict) {
+        List<String> neighbors = new ArrayList<>();
+        char[] ca = s.toCharArray();
+        
+        for (char ch = 'a'; ch <= 'z'; ch++) {
+            for (int i = 0; i < ca.length; i++) {
+                if (ch == ca[i]) continue;
+                
+                char org = ca[i];
+                ca[i] = ch;
+                
+                if (dict.contains(String.valueOf(ca))) {
+                    neighbors.add(String.valueOf(ca));
+                }
+                
+                ca[i] = org;
+            }
+        }
+        
+        return neighbors;
+    }
+}
+```
+
+
+
+#### 127. Word Ladder
+
+> 单向BFS
+
+```java
+class LC127 {
+    public int ladderLength(String beginWord, String endWord, List<String> wordList) {
+        Set<String> dict = new HashSet<>(wordList);
+        dict.add(beginWord);
+        
+        Queue<String> q = new LinkedList<>();
+        q.offer(beginWord);
+        int level = 1;
+        
+        Set<String> visited = new HashSet<>();
+        
+        while (!q.isEmpty()) {
+            int size = q.size();
+            
+            for (int i = 0; i < size; i++) {
+                String word = q.poll();
+                visited.add(word);
+                
+                if (word.equals(endWord)) {
+                    return level;
+                }
+                
+                List<String> neighbors = getNeighbors(word, dict);
+                
+                for (String nb : neighbors) {
+                    if (!visited.contains(nb)) {
+                        q.offer(nb);
+                    }
+                }
+            }
+            
+            level += 1;
+        }
+        
+        return 0;
+    }
+    
+    private List<String> getNeighbors(String curr, Set<String> dict) {
+        List<String> neighbors = new ArrayList<>();
+        char[] ca = curr.toCharArray();
+        
+        for (int i = 0; i < ca.length; i++) {
+            for (char ch = 'a'; ch <= 'z'; ch++) {
+                if (ch == ca[i]) continue;
+                
+                char org = ca[i];
+                ca[i] = ch;
+                
+                if (dict.contains(String.valueOf(ca))) {
+                    neighbors.add(String.valueOf(ca));
+                    //使用过的word从dict中删除
+                    dict.remove(String.valueOf(ca));
+                }
+                
+                ca[i] = org;
+            }
+        }
+        
+        return neighbors;
+    }
+}
+```
+
+
+
+> 双向BFS
+
+```java
+class Solution {
+    public int ladderLength(String beginWord, String endWord, List<String> wordList) {
+        if (!wordList.contains(endWord)) return 0;
+        
+        Set<String> dict = new HashSet<>(wordList);
+        
+        int level = 1;
+        
+        Set<String> beginSet = new HashSet<>();
+        Set<String> endSet = new HashSet<>();
+        
+        beginSet.add(beginWord);
+        endSet.add(endWord);
+        
+        while (!beginSet.isEmpty() && !endSet.isEmpty()) {
+            //每次使用小的set进行扩充，这样实现双端的平衡，beginSet表示小集合
+            if (beginSet.size() > endSet.size()) {
+                Set<String> set = beginSet;
+                beginSet = endSet;
+                endSet = set;
+            }
+            
+            Set<String> temp = new HashSet<>();
+            
+            for (String word : beginSet) {
+                char[] ca = word.toCharArray();
+                
+                for (int i = 0; i < ca.length; i++) {
+                    for (char ch = 'a'; ch <= 'z'; ch++) {
+                        if (ca[i] == ch) continue;
+                        
+                        char org = ca[i];
+                        ca[i] = ch;
+                        
+                        String target = String.valueOf(ca);
+                        //当一个单词存在于另一个集合的时候说明两端相遇了，这时候返回level + 1
+                        if (endSet.contains(target)) return level + 1;
+
+                        if (dict.contains(target)) {
+                            temp.add(target);
+                            //使用过的word从dict中删除
+                            dict.remove(target);
+                        }
+
+                        ca[i] = org;
+                    }
+                }
+            }
+            
+            beginSet = temp;
+            level += 1;
+        }
+        
+        return 0;
+    }
+}
+```
+
+
+
+#### 317. Shortest Distance from All Buildings
+
+```java
+class LC317 {
+    private int[] dir = {0, 1, 0, -1, 0};
+    
+    public int shortestDistance(int[][] grid) {
+        if (grid == null || grid.length == 0) return -1;
+        
+        int m = grid.length, n = grid[0].length;
+
+        int[][] dist = new int[m][n];
+        int[][] reachable = new int[m][n];
+        
+        int building = 0;
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == 1) {
+                    building += 1;
+                    bfs(grid, i, j, dist, reachable);
+                }
+            }
+        }
+        
+        int min = Integer.MAX_VALUE;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                //注意可能存在不是能到达所有building的点
+                if (grid[i][j] == 0 && reachable[i][j] == building) {
+                    min = Math.min(min, dist[i][j]);
+                }
+            }
+        }
+ 
+        return min == Integer.MAX_VALUE ? -1 : min;
+    }
+    
+    private void bfs(int[][] grid, int r, int c, int[][] dist, int[][] reachable) {
+        int m = grid.length, n = grid[0].length;
+        boolean[][] visited = new boolean[m][n];
+        
+        Queue<int[]> q = new LinkedList<>();
+        q.offer(new int[]{r, c});
+        
+        dist[r][c] = 0;
+        int level = 0;
+        
+        while (!q.isEmpty()) {
+            int size = q.size();
+            
+            for (int i = 0; i < size; i++) {
+                int[] p = q.poll();
+                int x = p[0], y = p[1];
+                //错误做法，如果用dist[x][y]去更新下一层节点的距离会出错，因为dist[x][y]可能包含了之前一层的距离，并只是当前层的距离
+                // int d = dist[x][y];
+                
+                for (int j = 0; j < 4; j++) {
+                    int nx = x + dir[j], ny = y + dir[j+1];
+                
+                    if (nx < 0 || ny < 0 || nx >= m || ny >= n || grid[nx][ny] != 0 || visited[nx][ny]) {
+                        continue;
+                    }
+
+                    
+                    dist[nx][ny] += level + 1;
+                    reachable[nx][ny] += 1;
+                    
+                    visited[nx][ny] = true;
+
+                    q.offer(new int[]{nx, ny});
+                }
+            }
+            
+            level += 1;
+        }
+    }
+}
+```
+
+
+
+
+
 #### 1102. Path With Maximum Minimum Value
 
 BFS + PriorityQueue
@@ -4276,6 +4604,105 @@ class LC523 {
 ### 8. Union Find
 
 ---
+
+#### 305. Number of Islands II
+
+```java
+/**
+ * Time(O(n)) n is the length of positions
+ */
+class LC305 {
+    private int[] dir = {0, 1, 0, -1, 0};
+    private int islands = 0;
+    private Map<Integer, Integer> map = new HashMap<>();
+    
+    public List<Integer> numIslands2(int m, int n, int[][] positions) {
+        int[][] grid = new int[m][n];
+        
+        UF uf = new UF(m * n);
+        List<Integer> res = new ArrayList<>();
+        
+        for (int[] p : positions) {
+            res.add(checkIslands(grid, p, uf));
+        }
+        
+        return res;
+    }
+    
+    private int checkIslands(int[][] grid, int[] pos, UF uf) {
+        int m = grid.length, n = grid[0].length;
+        
+        int ix = pos[0], iy = pos[1];
+        if (grid[ix][iy] == 1) {
+            return map.get(islands);
+        }
+        
+        uf.size += 1;
+        grid[ix][iy] = 1;
+        
+        for (int i = 0; i < 4; i++) {
+            int x = ix + dir[i], y = iy + dir[i+1];
+            
+            if (x < 0 || y < 0 || x >= m || y >= n || grid[x][y] != 1) continue;
+            
+            int p1 = ix * n + iy;
+            int p2 = x * n + y;
+            
+            uf.union(p1, p2);
+        }
+        
+        map.put(islands, uf.size);
+        
+        return uf.size;
+    }
+    
+    class UF {
+        int size = 0;
+        int[] root;
+        int[] rank;
+        
+        public UF(int n) {
+            root = new int[n];
+            rank = new int[n];
+            
+            for (int i = 0; i < n; i++) {
+                root[i] = i;
+            }
+        }
+        
+        public int find(int x) {
+            if (x != root[x]) {
+                root[x] = find(root[x]);
+            }
+            
+            return root[x];
+        }
+        
+        public void union(int x, int y) {
+            int rx = find(x);
+            int ry = find(y);
+            
+            if (rx != ry) {
+                if (rank[rx] < rank[ry]) {
+                    root[rx] = ry;
+                } else {
+                    root[ry] = rx;
+                }
+                
+                if (rank[rx] == rank[ry]) {
+                    rank[rx] += 1;
+                }
+                
+                size -= 1;
+            }
+        }
+    }
+}
+```
+
+
+
+
 
 #### 839. Similar String Groups
 

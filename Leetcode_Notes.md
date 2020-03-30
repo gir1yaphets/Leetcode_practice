@@ -2192,6 +2192,59 @@ class LC721 {
 
 
 
+#### 886. Possible Bipartition
+
+> graph颜色标记问题
+
+```java
+class LC886 {
+    private Map<Integer, Set<Integer>> g = new HashMap<>();
+    
+    public boolean possibleBipartition(int N, int[][] dislikes) {
+        buildGraph(N, dislikes);
+        
+        int[] colors = new int[N + 1];
+        
+        for (int i = 1; i <= N; i++) {
+            if (colors[i] == 0 && !dfs(i, 1, colors)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    private boolean dfs(int start, int color, int[] colors) {
+        if (colors[start] != 0) {
+            return colors[start] == color;
+        }
+        
+        colors[start] = color;
+        
+        for (int nb : g.get(start)) {
+            if (!dfs(nb, -color, colors)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    private void buildGraph(int N, int[][] dis) {
+        for (int i = 1; i <= N; i++) {
+            g.put(i, new HashSet<>());
+        }
+        
+        for (int[] d : dis) {
+            g.get(d[0]).add(d[1]);
+            g.get(d[1]).add(d[0]);
+        }
+    }
+}
+```
+
+
+
 
 
 #### 1219. Path with Maximum Gold
@@ -3705,6 +3758,145 @@ class LC486 {
 
 
 
+#### 489. Robot Room Cleaner
+
+```java
+interface Robot {
+    // Returns true if the cell in front is open and robot moves into the cell.
+    // Returns false if the cell in front is blocked and robot stays in the current
+    // cell.
+    public boolean move();
+
+    // Robot will stay in the same cell after calling turnLeft/turnRight.
+    // Each turn will be 90 degrees.
+    public void turnLeft();
+
+    public void turnRight();
+
+    // Clean the current cell.
+    public void clean();
+}
+
+class LC489 {
+    public void cleanRoom(Robot robot) {
+        Set<String> visited = new HashSet<>();
+
+        //没给网格，所以需要使用相对位置
+        dfs(robot, 0, 0, 0, visited);
+    }
+
+    private void dfs(Robot robot, int x, int y, int dir, Set<String> visited) {
+        String point = x + "-" + y;
+        if (visited.contains(point))
+            return;
+
+        robot.clean();
+        visited.add(point);
+
+        for (int i = 0; i < 4; i++) {
+            int nx = x, ny = y;
+            if (robot.move()) {
+                switch (dir) {
+                    case 0:
+                        nx = x - 1;
+                        break;
+                    case 90:
+                        ny = y + 1;
+                        break;
+                    case 180:
+                        nx = x + 1;
+                        break;
+                    case 270:
+                        ny = y - 1;
+                        break;
+                    default:
+                        break;
+                }
+
+                dfs(robot, nx, ny, dir, visited);
+
+                //backtrack回溯，想往回走首先先转头180度，然后再把头重新转向上
+                robot.turnLeft();
+                robot.turnLeft();
+                robot.move();
+                robot.turnLeft();
+                robot.turnLeft();
+            }
+
+            // 当前方向不可以走，换方向，总是向右转
+            dir += 90;
+            dir %= 360;
+            robot.turnRight();
+        }
+    }
+}
+```
+
+
+
+
+
+#### 679. 24 Game ★
+
+```java
+/**
+ * 1.不需要关心()的运算，括号只是指定先运算哪两个数
+ * 2.每次先指定两个数进行运算，然后运算出一个结果和其它数字再进行运算
+ */
+class LC679 {
+    public boolean judgePoint24(int[] nums) {
+        int n = nums.length;
+        if (n <= 0) return false;
+        
+        double[] a = new double[n];
+        
+        for (int i = 0; i < n; i++) {
+            a[i] = nums[i];
+        }
+        
+        return dfs(a);
+    }
+    
+    private boolean dfs(double[] a) {
+        //注意绝对值
+        if (a.length == 1) return Math.abs(a[0] - 24) < 0.001;
+        
+        for (int i = 0; i < a.length; i++) {
+            for (int j = i + 1; j < a.length; j++) {
+                double[] b = new double[a.length - 1];
+                
+                int index = 0;
+                for (int k = 0; k < a.length; k++) {
+                    //将本次没有被选中的数字拷贝到b数组中，留着继续dfs
+                    if (k == i || k == j) continue;
+                    
+                    b[index++] = a[k];
+                }
+                
+                //遍历将本次进行运算的结果和剩余的数字进行dfs
+                for (double d : compute(a[i], a[j])) {
+                    b[index] = d;
+                    
+                    if (dfs(b)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    private double[] compute(double x, double y) {
+        return new double[]{x + y, x - y, y - x, x * y, x / y, y / x};
+    }
+}
+```
+
+
+
+
+
 #### 842. Split Array into Fibonacci Sequence
 
 ```java
@@ -4193,6 +4385,65 @@ public int coinChange_2(int[] coins, int amount) {
     return dp[amount] >= amount + 1 ? -1 : dp[amount];
 }
 ```
+
+
+
+#### 494. Target Sum ★
+
+```java
+class LC494 {
+    private int count = 0;
+    
+    public int findTargetSumWays(int[] nums, int S) {
+        dfs(nums, 0, S, 0);
+        
+        return count;
+    }
+    
+    private void dfs(int[] nums, int start, int S, int sum) {
+        if (start == nums.length) {
+            if (sum == S) {
+                count += 1;
+            }
+        } else {
+            dfs(nums, start + 1, S, sum + nums[start]);
+            
+            dfs(nums, start + 1, S, sum - nums[start]);
+        }
+    }
+
+    /**
+     * 用注释掉的两行做循环[1], 1过不了
+     * 有空需要再研究一下
+     */
+    public int findTargetSumWays_dp(int[] nums, int S) {
+        int sum = 0;
+        for (int i = 0; i < nums.length; i++) {
+            sum += nums[i];
+        }
+        
+        if (sum < S) return 0;
+        
+        int n = nums.length;
+        int[][] dp = new int[n+1][2 * sum + 1];
+        
+        dp[0][sum] = 1;
+        
+        for (int i = 1; i <= n; i++) {
+            //for (int j = nums[i-1]; j + nums[i-1] < 2 * sum + 1; j++)
+            for (int j = 0; j < 2 * sum + 1; j++) {
+                if (j + nums[i-1] < 2 * sum + 1) dp[i][j] += dp[i-1][j+nums[i-1]];
+                if (j - nums[i-1] >= 0) dp[i][j] += dp[i-1][j-nums[i-1]];
+                // dp[i][j] = dp[i-1][j-nums[i-1]] + dp[i-1][j+nums[i-1]];
+            }
+        }
+        
+        return dp[nums.length][S + sum];
+    }
+}
+```
+
+
 
 
 

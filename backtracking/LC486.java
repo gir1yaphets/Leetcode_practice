@@ -18,7 +18,7 @@ class LC486 {
         //但是当前选手要取nums[l], nums[r]产生得分较大的
         int diff = Math.max(nums[l] - getScore(nums, l + 1, r, memo), nums[r] - getScore(nums, l, r - 1, memo));
 
-        //把这个自区间产生的解记录下来
+        //把这个子区间产生的解记录下来
         memo[l * nums.length + r] = diff;
 
         return diff;

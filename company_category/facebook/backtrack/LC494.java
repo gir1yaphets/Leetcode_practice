@@ -1,5 +1,4 @@
 package backtrack;
-import java.util.*;
 
 class LC494 {
     private int count = 0;

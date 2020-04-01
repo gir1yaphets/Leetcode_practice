@@ -4225,7 +4225,7 @@ class LC1291 {
 
 
 
-#### 320. Generalized Abbreviation
+#### 320. Generalized Abbreviation ★
 
 ```java
 class LC320 {
@@ -4245,11 +4245,11 @@ class LC320 {
         
         int size = curr.length();
         
-        //omit charAt(index)
+        //不使用当前的char，准备用数字代替，直接继续往下一位走
         backtrack(word, index + 1, res, curr, count + 1);
         curr.setLength(size);
         
-        //not omit charAt(index)
+        //使用当前的char，加上当前char之前把这一层的count加上
         backtrack(word, index + 1, res, curr.append(count > 0 ? count : "").append(word.charAt(index)), 0);
         curr.setLength(size);
     }

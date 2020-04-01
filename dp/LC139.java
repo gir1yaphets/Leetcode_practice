@@ -85,4 +85,33 @@ class LC139 {
         memo[start] = false;
         return false;
     }
+
+    /**
+     * memo 第二种写法 和第一种基本类似
+     */
+    public boolean wordBreak_memo2(String s, List<String> wordDict) {
+        if (s == null || s.length() == 0 || wordDict == null || wordDict.size() == 0) return false;
+        int[] memo = new int[s.length()];
+        
+        return dfs(0, s, wordDict, memo);
+    }
+    
+    private boolean dfs(int start, String s, List<String> dict, int[] memo) {
+        if (start == s.length()) return true;
+        
+        if (memo[start] != 0) return memo[start] == 1;
+        
+        for (int i = start; i < s.length(); i++) {
+            String first = s.substring(start, i + 1);
+            
+            if (dict.contains(first) && dfs(i + 1, s, dict, memo)) {
+                memo[start] = 1;
+                return true;
+            }
+        }
+        
+        memo[start] = -1;
+        
+        return false;
+    }
 }

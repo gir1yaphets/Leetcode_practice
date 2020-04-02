@@ -1990,6 +1990,90 @@ class Solution {
 
 
 
+- Version 2
+
+```java
+class Solution {
+    class TrieNode {
+        TrieNode[] children;
+        String word;
+        
+        public TrieNode() {
+            children = new TrieNode[26];
+            word = "";
+        }
+    }
+    
+    private TrieNode root = new TrieNode();
+    private int[] d = {0, 1, 0, -1, 0};
+    private List<String> res = new ArrayList<>();
+    
+    public List<String> findWords(char[][] board, String[] words) {
+        if (board == null || board.length == 0 || words == null || words.length == 0) return res;
+        int m = board.length, n = board[0].length;
+        add(words);
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                dfs(board, i, j, root);
+            }
+        }
+        
+        return res;
+    }
+    
+    private void dfs(char[][] board, int x, int y, TrieNode node) {
+        char c = board[x][y];
+        //这里需要先下一层把root的虚节点跳过去，否则当board只有一个字母的时候就会check root的虚节点
+        if (node.children[c - 'a'] == null) {
+            return;
+        }
+        
+        node = node.children[c - 'a'];
+        int m = board.length, n = board[0].length;
+        
+        if (!node.word.equals("")) {
+            res.add(node.word);
+            node.word = "";
+        }
+        
+        char org = board[x][y];
+        board[x][y] = '#';
+        
+        for (int i = 0; i < 4; i++) {
+            int nx = x + d[i], ny = y + d[i+1];
+            
+            if (nx < 0 || ny < 0 || nx >= m || ny >= n || board[nx][ny] == '#' || node.children[board[nx][ny] - 'a'] == null) continue;
+
+            dfs(board, nx, ny, node);
+        }
+        
+        board[x][y] = org;
+    }
+    
+    private void add(String[] words) {
+        for (String w : words) {
+            TrieNode node = root;
+            char[] ca = w.toCharArray();
+            
+            for (int i = 0; i < ca.length; i++) {
+                int index = ca[i] - 'a';
+                if (node.children[index] == null) {
+                    node.children[index] = new TrieNode();
+                }
+                node = node.children[index];
+            }
+            
+            node.word = w;
+        }
+    }
+}
+```
+
+
+
+
+
 #### 329. Longest Increasing Path in a Matrix ★
 
 ```java
@@ -5338,7 +5422,9 @@ class LC959 {
 
 ---
 
-+ 每一个TrieNode都带有一个TrieNode数组类型的children元素，初始化的时候数组的每一个TrieNode都是null。当插入单词的时候将char放到对应的数组位置上, **比如 'c'就放到children[2]的位置, 但和一般存储不同点在于 不是将chidlren[2] = 'c' 而是-> children[c-'a] = new TrieNode(); 即当chilren[2] != null说明这个位置存储了一个字母**
+> 1. TrieNode是每一个节点的结构，包含TrieNode[] children和word. 
+> 2. Trie是整个字典树的结构，只包含一个TrieNode root
+> 3. 每一个TrieNode都带有一个TrieNode数组类型的children元素，初始化的时候数组的每一个TrieNode都是null。当插入单词的时候将char放到对应的数组位置上, **比如 'c'就放到children[2]的位置, 但和一般存储不同点在于 不是将chidlren[2] = 'c' 而是-> children[c-'a] = new TrieNode(); 即当chilren[2] != null说明这个位置存储了一个字母**
 
 + **Leetcode**: **208, 211,212**
 
@@ -5405,6 +5491,164 @@ public boolean startsWith(String prefix) {
   	return true;
 }
 ```
+
+
+
+#### 211. Add and Search Word - Data structure design ★
+
+> 1. 这道题TrieNode就不能存储word整个单词了，因为目标搜索单词包含'.' 没有办法比equal, 所以存为boolean的isWord方便很多
+> 2. 遇到'.'的时候需要遍历整个下一层所有的子children，所以需要进行dfs搜索
+
+```java
+class WordDictionary {
+    
+    class TrieNode {
+        TrieNode[] children;
+        boolean isWord;
+        
+        public TrieNode() {
+            children = new TrieNode[26];
+            isWord = false;
+        }
+    }
+
+    private TrieNode root;
+    
+    /** Initialize your data structure here. */
+    public WordDictionary() {
+        root = new TrieNode();
+    }
+    
+    /** Adds a word into the data structure. */
+    public void addWord(String word) {
+        char[] ca = word.toCharArray();
+        TrieNode node = root;
+        
+        for (int i = 0; i < ca.length; i++) {
+            int index = ca[i] - 'a';
+            
+            if (node.children[index] == null) {
+                node.children[index] = new TrieNode();
+            }
+            
+            node = node.children[index];
+        }
+
+        node.isWord = true;
+    }
+    
+    /** Returns if the word is in the data structure. A word could contain the dot character '.' to represent any one letter. */
+    public boolean search(String word) {
+        return dfs(word.toCharArray(), 0, root);
+    }
+    
+    private boolean dfs(char[] ca, int wi, TrieNode node) {
+        if (wi == ca.length) {
+            return node.isWord;
+        }
+        
+        if (ca[wi] == '.') {
+            for (int i = 0; i < 26; i++) {
+                TrieNode child = node.children[i];
+                if (child == null) continue;
+                
+                if (dfs(ca, wi + 1, child)) {
+                    return true;
+                }
+            }
+        } else {
+            int index = ca[wi] - 'a';
+
+            if (node.children[index] == null) {
+                return false;
+            }
+
+            if (dfs(ca, wi + 1, node.children[index])) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+}
+```
+
+
+
+#### 1032. Stream of Characters
+
+```java
+class LC1032 {
+    class TrieNode {
+        TrieNode[] children;
+        boolean isWord;
+        
+        public TrieNode() {
+            children = new TrieNode[26];
+            isWord = false;
+        }
+    }
+
+    private TrieNode root;
+    private StringBuilder sb;
+    
+    public StreamChecker(String[] words) {
+        root = new TrieNode();
+        sb = new StringBuilder();
+        
+        for (String w : words) {
+            TrieNode node = root;
+            char[] ca = w.toCharArray();
+            
+          	//从后想前加入
+            for (int i = ca.length - 1; i >= 0; i--) {
+                int p = ca[i] - 'a';
+                if (node.children[p] == null) {
+                    node.children[p] = new TrieNode();
+                }
+                
+                node = node.children[p];
+            }
+            
+            node.isWord = true;
+        }        
+    }
+    
+    public boolean query(char letter) {
+        sb.append(letter);
+        TrieNode node = root;
+        
+        for (int i = sb.length() - 1; i >= 0 && node != null; i--) {
+            char c = sb.charAt(i);
+            /**
+             * 错误写法先check null，
+             * ["StreamChecker","query","query","query","query","query","query","query","query","query","query","query","query"]
+             * [[["cd","f","kl"]],["a"],["b"],["c"],["d"],["e"],["f"],["g"],["h"],["i"],["j"],["k"],["l"]]
+             * 当e进来的时候sb是"edcba"" 如果先check null的话e没有就继续找d，d又找到了，所以错误
+             * 每次check一个字母都需要移动一次node
+             */
+            
+            // if (node.children[c - 'a'] != null) {
+                node = node.children[c - 'a'];
+                    
+                if (node != null && node.isWord) {
+                    return true;
+                }
+            // }
+        }
+        
+        return false;
+    }
+}
+
+/**
+ * Your StreamChecker object will be instantiated and called as such:
+ * StreamChecker obj = new StreamChecker(words);
+ * boolean param_1 = obj.query(letter);
+ */
+```
+
+
 
 
 

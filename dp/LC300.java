@@ -11,11 +11,11 @@ class LC300 {
         if (n == 0) return 0;
         
         int[] dp = new int[n];
-        Arrays.fill(dp, 1);
-        
         int max = 1;
         
-        for (int i = 1; i < n; i++) {
+        for (int i = 0; i < n; i++) {
+            //起点也可能出现在任何位置，所以每个dp[i]初始化为1
+            dp[i] = 1;
             for (int j = 0; j < i; j++) {
                 if (nums[j] < nums[i]) {
                     //因为j是从0~i, 所以会反复更新dp[i],选择长度最大的
@@ -23,6 +23,7 @@ class LC300 {
                 }
             }
             
+            //之所以要统计max是因为最长序列不一定出现在结尾，有可能出现在dp[i]的任何位置
             max = Math.max(max, dp[i]);
         }
         

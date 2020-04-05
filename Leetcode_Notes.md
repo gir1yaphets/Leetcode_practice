@@ -4873,6 +4873,108 @@ class LC304 {
 
 
 
+#### 309. Best Time to Buy and Sell Stock with Cooldown
+
+![309](/Users/xiaoluepeng/Development/LeetCode/project/capture/309.png)
+
+```java
+
+public class LC309 {
+    /**
+     * rest[i]:第i天不操作获得的最大收益(休息+cooldown) = Math.max(res[i-1], sold[i-1])
+     * hold[i]:第i天持有股票获得的最大收益 = Math.max(hold[i-1], rest[i] - prices[i])
+     * sold[i]:第i天卖出股票的最大收益 = hold[i] + prices[i]
+     * 注意sold[i]不能从rest[i-1]迁移过来，rest[i-1]可能不持有股票，所以只能从持有股票的状态迁移
+     */
+    public int maxProfit(int[] prices) {
+        int sold = 0;
+        int hold = Integer.MIN_VALUE;
+        int rest = 0;
+        
+        for (int price : prices) {
+            int preSold = sold;
+            
+            hold = Math.max(hold, rest - price);
+            sold = hold + price;
+            rest = Math.max(rest, preSold);
+        }
+        
+        return Math.max(sold, rest);
+    }
+}
+```
+
+
+
+
+
+#### 337. House Robber III
+
+```java
+public class LC337 {
+
+    public class TreeNode {
+        int val;
+        TreeNode left;
+        TreeNode right;
+
+        TreeNode(int x) {
+            val = x;
+        }
+    }
+
+    /**
+     * 错误做法，从root开始枪，和不从root开始枪，隔一层取一次反
+     * 错误反例[4,1,2,3]，1和2都不抢，中间隔了两个
+     * 错误原因：并不是隔一层抢一次，而是相邻层不能抢，统计出最大值
+     */
+    public int rob_wrong(TreeNode root) {
+        return Math.max(dfs_wrong(root, 1), dfs_wrong(root, 0));
+    }
+    
+    private int dfs_wrong(TreeNode root, int flag) {
+        if (root == null) return 0;
+        
+        int sum = 0;
+        
+        if (flag == 1) sum += root.val;
+        
+        int left = dfs_wrong(root.left, 1 - flag);
+        int right = dfs_wrong(root.right, 1 - flag);
+        
+        sum += left + right;
+        
+        return sum;
+    }
+
+    /**
+     * 正确做法
+     * res[0]代表当前root不抢，res[1]代表当前root抢
+     */
+    public int rob(TreeNode root) {
+        return Math.max(dfs(root)[0], dfs(root)[1]);
+    }
+    
+    private int[] dfs(TreeNode root) {
+        if (root == null) return new int[]{0, 0};
+        
+        int[] left = dfs(root.left);
+        int[] right = dfs(root.right);
+
+        int[] res = new int[2];
+        
+        res[0] = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
+        res[1] = root.val + left[0] + right[0];
+        
+        return res;
+    }
+}
+```
+
+
+
+
+
 #### 221. Maximal Square
 
 > dp\[i]\[j]: \[0][0] ~ \[i][j]中最长的全是1的边长
@@ -5028,6 +5130,52 @@ public class LC740 {
         }
         
         return dp2;
+    }
+}
+```
+
+
+
+#### 790. Domino and Tromino Tiling
+
+![790](/Users/xiaoluepeng/Development/LeetCode/project/capture/790.png)
+
+```java
+
+public class LC790 {
+    /**
+     * dp[i][j]：i第i列，j是第j种状态(1:上下齐 2.上多出来一块 3.下多出来一块)
+     */
+    public int numTilings(int N) {
+        if (N == 1) return 1;
+        
+        long[][] dp = new long[N+1][3];
+        int mod = 1000000007;
+        
+        dp[0][0] = dp[1][0] = dp[2][0] = 1;
+        for (int i = 2; i <= N; i++) {
+            dp[i][0] = (dp[i-1][0] + dp[i-2][0] + dp[i-1][1] + dp[i-1][2]) % mod;
+            dp[i][1] = (dp[i-2][0] + dp[i-1][2]) % mod;
+            dp[i][2] = (dp[i-2][0] + dp[i-1][1]) % mod;
+        } 
+        
+        return (int)dp[N][0];
+    }
+
+  	/**
+     * 状态2和状态3是对称的，所以可以合并
+     */
+    public int numTilings_compress(int N) {
+        long[][] dp = new long[N+1][2];
+        int mod = 1000000007;
+        
+        dp[0][0] = dp[1][0] = 1;
+        for (int i = 2; i <= N; i++) {
+            dp[i][0] = (dp[i-1][0] + dp[i-2][0] + 2 * dp[i-1][1]) % mod;
+            dp[i][1] = (dp[i-2][0] + dp[i-1][1]) % mod;
+        } 
+        
+        return (int)dp[N][0];
     }
 }
 ```

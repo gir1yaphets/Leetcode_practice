@@ -4348,6 +4348,69 @@ class LC320 {
 
 ---
 
+#### 72. Edit Distance ★
+
+![72](/Users/xiaoluepeng/Development/LeetCode/project/capture/72.png)
+
+```java
+class LC72 {
+    /**
+     * dp[i][j]: 长度为i的word1变成长度为j的word2的最短步数
+     * @return
+     */
+    public int minDistance(String word1, String word2) {
+        int l1 = word1.length(), l2 = word2.length();
+        
+        int[][] dp = new int[l1 + 1][l2 + 1];
+        
+        //当一个字符为空串的时候，从另一个字符变为空串需要字符长度的步数
+        for (int i = 0; i <= l1; i++) {
+            dp[i][0] = i;
+        }
+        
+        for (int j = 0; j <= l2; j++) {
+            dp[0][j] = j;
+        }
+        
+        for (int i = 1; i <= l1; i++) {
+            for (int j = 1; j <= l2; j++) {
+                //如果word1的最后一位和word2的最后一位相同，直接取掉，比较两个的前一位
+                //如果word1的最后一位和word2的最后一位不相同，从dp[i-1][j-1]花一步将最后一位从word1的最后一位改为word2的最后一位
+                int cost = (word1.charAt(i-1) == word2.charAt(j-1)) ? 0 : 1;
+                
+                dp[i][j] = Math.min(cost + dp[i-1][j-1], Math.min(dp[i-1][j], dp[i][j-1]) + 1);
+            }
+        }
+        
+        return dp[l1][l2];
+    }
+
+    public int minDistance_memoDfs(String word1, String word2) {
+        int[][] memo = new int[word1.length() + 1][word2.length() + 1];
+        return dfs(word1, word2, word1.length(), word2.length(), memo);
+    }
+    
+    private int dfs(String word1, String word2, int l1, int l2, int[][] memo) {
+        if (l1 == 0) return l2;
+        if (l2 == 0) return l1;
+        
+        if (memo[l1][l2] != 0) return memo[l1][l2];
+        
+        //最后一位相等，直接check 两个单词的len - 1长度
+        if (word1.charAt(l1 - 1) == word2.charAt(l2 - 1)) {
+            memo[l1][l2] = dfs(word1, word2, l1 - 1, l2 - 1, memo);
+        } else {
+            //1 + min(delete, insert, replace)
+            memo[l1][l2] = 1 + Math.min(Math.min(dfs(word1, word2, l1 - 1, l2, memo), dfs(word1, word2, l1, l2 - 1, memo)), dfs(word1, word2, l1 - 1, l2 - 1, memo));
+        }
+        
+        return memo[l1][l2];
+    }
+}
+```
+
+
+
 #### 139. Word Break    
 
 ***将字符串拆成两部分，用dp记录前半部分是否能切割，然后check后半部分单词是否在字典中***，这种方法很常见
@@ -5136,7 +5199,7 @@ public class LC740 {
 
 
 
-#### 790. Domino and Tromino Tiling
+#### 790. Domino and Tromino Tiling ★
 
 ![790](/Users/xiaoluepeng/Development/LeetCode/project/capture/790.png)
 
@@ -5176,6 +5239,109 @@ public class LC790 {
         } 
         
         return (int)dp[N][0];
+    }
+}
+```
+
+
+
+#### 1105. Filling Bookcase Shelves ★
+
+![1105](/Users/xiaoluepeng/Development/LeetCode/project/capture/1105.png)
+
+```java
+class LC1105 {
+    private int min = Integer.MAX_VALUE;
+    
+    public int minHeightShelves(int[][] books, int shelf_width) {
+        dfs(books, 0, shelf_width, 0, 0, 0);
+        return min;
+    }
+    
+    /**
+     * TLE
+     * @param books
+     * @param start
+     * @param shelf_width
+     * @param w：当前层的宽度
+     * @param h：当前总高度
+     * @param levelHeight:每一层的最大高度
+     */
+    private void dfs(int[][] books, int start, int shelf_width, int w, int h, int levelHeight) {
+        if (h > min) return;
+        if (w > shelf_width) return;
+
+        if (start == books.length) {
+            min = Math.min(min, h + levelHeight);
+            return;
+        }
+        
+        dfs(books, start + 1, shelf_width, w + books[start][0], h, Math.max(levelHeight, books[start][1]));
+        
+        dfs(books, start + 1, shelf_width, books[start][0], h + levelHeight, books[start][1]);
+    }
+
+    /**
+     * memo recursion
+     * @param books
+     * @param shelf_width
+     * @return
+     */
+    public int minHeightShelves_memo(int[][] books, int shelf_width) {
+        int[][] memo = new int[books.length + 1][shelf_width + 1];
+        return dfs(books, 0, shelf_width, shelf_width, 0, memo);
+    }
+    
+    /**
+     * 
+     * @param books
+     * @param start
+     * @param shelf_width
+     * @param wr: width remain
+     * @param h: 当前层的高度
+     * @param memo
+     * @return
+     */
+    private int dfs(int[][] books, int start, int shelf_width, int wr, int h, int[][] memo) {
+        if (start == books.length) return h;
+        
+        if (memo[start][wr] != 0) return memo[start][wr];
+        
+        int height = Integer.MAX_VALUE;
+        
+        //当前层还能放下
+        if (wr >= books[start][0]) {
+            height = dfs(books, start + 1, shelf_width, wr - books[start][0], Math.max(h, books[start][1]), memo);
+        }
+        
+        //min(放在当前层的高度，放在下一层的高度)
+        height = Math.min(height, h + dfs(books, start + 1, shelf_width, shelf_width - books[start][0], books[start][1], memo));
+        
+        memo[start][wr] = height;
+        return height;
+    }
+
+    /**
+     * dp[i]:摆放0~i本书需要的最小高度
+     */
+    public int minHeightShelves_dp(int[][] books, int shelf_width) {
+        int n = books.length;
+        int[] dp = new int[n];
+        
+        for (int i = 0; i < n; i++) {
+            dp[i] = Integer.MAX_VALUE;
+            int w = 0, h = 0;
+            for (int j = i; j >= 0; j--) {
+                if ((w += books[j][0]) > shelf_width) break;
+                
+                //把j~i放在一层 dp(0~j-1)已经计算过
+                h = Math.max(h, books[j][1]);
+                
+                dp[i] = Math.min(dp[i], (j == 0 ? h : dp[j-1] + h));
+            }
+        }
+        
+        return dp[n-1];
     }
 }
 ```

@@ -4348,6 +4348,146 @@ class LC320 {
 
 ---
 
+> #10, #44, #72, #97, #115同一类问题，字符串匹配
+
+
+
+#### 10. Regular Expression Matching ★
+
+```java
+class LC10 {
+    public boolean isMatch(String s, String p) {
+        return dfs(s, p);
+    }
+    
+    private boolean dfs(String s, String p) {
+        if (p.length() == 0) return s.length() == 0;
+        
+        //第一位是否匹配
+        boolean firstMatch = s.length() > 0 && (s.charAt(0) == p.charAt(0) || p.charAt(0) == '.');
+        
+        /**
+         * p的前两位中第二位是*
+         * case1: *前面的字符使用0次，比较p的*后面的字符和s是否匹配
+         * case2: *当第一位字符匹配的情况下，*前面字符要使用多次，比较p和s的剩余字符比较
+         */
+        if (p.length() >= 2 && p.charAt(1) == '*') {
+            return dfs(s, p.substring(2)) || (firstMatch && dfs(s.substring(1), p));
+        } else {
+            //不包含*的时候则一位一位比较
+            return firstMatch && dfs(s.substring(1), p.substring(1));
+        }
+    }
+
+    /**
+     * substring换成index
+     * @param s
+     * @param p
+     * @param indexs
+     * @param indexp
+     * @return
+     */
+    private boolean dfs(String s, String p, int indexs, int indexp) {
+        if (indexp == p.length()) return indexs == s.length();
+        
+        boolean firstMatch = indexs < s.length() && (s.charAt(indexs) == p.charAt(indexp) || p.charAt(indexp) == '.');
+        
+        if (indexp < p.length() - 1 && p.charAt(indexp + 1) == '*') {
+            return dfs(s, p, indexs, indexp + 2) || (firstMatch && dfs(s, p, indexs + 1, indexp));
+        } else {
+            return firstMatch && dfs(s, p, indexs + 1, indexp + 1);
+        }
+    }
+
+    /**
+     * dp[i][j]: s中的以i为长度的字符串和p中以j为长度的字符串是否可以匹配
+     * @param s
+     * @param p
+     * @return
+     */
+    public boolean isMatch_dp(String s, String p) {
+        int m = s.length(), n = p.length();
+        boolean[][] dp = new boolean[m+1][n+1];
+        
+        //空串: 可以matrch
+        dp[0][0] = true;
+
+        //s是空串, 当p中有一位是*的时候看前两位(即去掉*和*前一位) e.g s = ""; p = "a*b*"
+        for (int i = 2; i <= n; i++) {
+            if (p.charAt(i-1) == '*') {
+                dp[0][i] = dp[0][i-2];
+            }
+        }
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                char sc = s.charAt(i-1);
+                char pc = p.charAt(j-1);
+                
+                //当前字符相等，匹配结果=[i-1][j-1]的匹配结果
+                if (sc == pc || pc == '.') {
+                    dp[i][j] = dp[i-1][j-1];
+                } else if (pc == '*') {
+                    /**
+                     * p当前是*
+                     * case1: *前的字母取0个，dp[i][j-2] == true ->dp[i][j] = true
+                     * case2: *前的字母取多个, 判断*前一个字母和s当前字母能否匹配，如果可以则可以将i-1，j的匹配结果传递过来 e.g s = aaa, p = a*
+                     */
+                    if (dp[i][j-2]) {
+                        dp[i][j] = true;
+                    } else if (sc == p.charAt(j-2) || p.charAt(j-2) == '.') {
+                        dp[i][j] = dp[i-1][j];
+                    }
+                }
+            }
+        }
+        
+        return dp[m][n];
+    }
+}
+```
+
+
+
+#### 44. Wildcard Matching
+
+```java
+class LC44 {
+    public boolean isMatch(String s, String p) {
+        int m = s.length(), n = p.length();
+        boolean[][] dp = new boolean[m+1][n+1];
+        
+        dp[0][0] = true;
+        
+        for (int i = 1; i <= n; i++) {
+            if (p.charAt(i - 1) == '*') {
+                dp[0][i] = dp[0][i-1];
+            }
+        }
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                char sc = s.charAt(i-1), pc = p.charAt(j-1);
+                if (sc == pc || pc == '?') {
+                    dp[i][j] = dp[i-1][j-1];
+                } else if (pc == '*') {
+                    /**
+                     * pc == '*'时候有两种情况
+                     * 1.*代表空字符: s = aa p = aa* 这时候只需要传递dp[i][j-1]的结果，即*前面的如果能和当前i长度的s匹配那么*代表空字符也能匹配
+                     * 2.*代表一个或多个字符 s = abcd p = ab* 这时候传递dp[i-1][j]的结果，即如果ab*能匹配abc的话，ab*也能匹配abcd
+                     */
+                    dp[i][j] = dp[i-1][j] || dp[i][j-1];
+                }
+            }
+        }
+        
+        return dp[m][n];
+    }
+}
+```
+
+
+
 #### 72. Edit Distance ★
 
 ![72](/Users/xiaoluepeng/Development/LeetCode/project/capture/72.png)
@@ -4408,6 +4548,230 @@ class LC72 {
     }
 }
 ```
+
+
+
+#### 97. Interleaving String
+
+```java
+class LC97 {
+    private String s1, s2, s3;
+    /**
+     * Wrong but don't know why
+     * "cabbacccabacbcaabaccacacc"
+     * "bccacbacabbabaaacbbbbcbbcacc"
+     * "cbccacabbacabbbaacbcacaaacbbacbcaabbbbacbcbcacccacacc"
+     */
+    public boolean isInterleave(String s1, String s2, String s3) {
+        this.s1 = s1;
+        this.s2 = s2;
+        this.s3 = s3;
+        
+        if (s1.equals("")) return s2.equals(s3);
+        if (s2.equals("")) return s1.equals(s3);
+        if (s1.length() + s2.length() != s3.length()) return false;
+        
+        int[][] memo = new int[s1.length() + 1][s3.length() + 1];
+        
+        for (int[] row : memo) {
+            Arrays.fill(row, -1);
+        }
+        
+        return dfs(0, 0, "", memo) == 1;
+    }
+    
+    private int dfs(int p1, int p3, String left, int[][] memo) {
+        if (p1 == s1.length()) {
+            left = left + (p3 < s3.length() ? s3.substring(p3) : "");
+            memo[p1][p3] = left.equals(s2) ? 1 : 0;
+            return memo[p1][p3];
+        }
+        
+        if (p3 == s3.length()) {
+            memo[p1][p3] = 0;
+            return memo[p1][p3];
+        }
+        
+        if (memo[p1][p3] != -1) return memo[p1][p3];
+        
+        if (s1.charAt(p1) == s3.charAt(p3)) {
+            int delete = dfs(p1 + 1, p3 + 1, left, memo);
+            int remain = dfs(p1, p3 + 1, left + s3.charAt(p3), memo);
+            
+            memo[p1][p3] = Math.max(delete, remain);
+        } else {
+            memo[p1][p3] = dfs(p1, p3 + 1, left + s3.charAt(p3), memo);
+        }
+        
+        return memo[p1][p3];
+    }
+
+    /**
+     * Another way of using dfs+memo
+     */
+    public boolean isInterleave_v2(String s1, String s2, String s3) {
+        this.s1 = s1;
+        this.s2 = s2;
+        this.s3 = s3;
+        
+        if (s1.equals("")) return s2.equals(s3);
+        if (s2.equals("")) return s1.equals(s3);
+        if (s1.length() + s2.length() != s3.length()) return false;
+        
+        int[][] memo = new int[s1.length() + 1][s2.length() + 1];
+        
+        for (int[] row : memo) {
+            Arrays.fill(row, -1);
+        }
+        
+        return dfs(0, 0, 0, memo) == 1;
+    }
+    
+    private int dfs(int p1, int p2, int p3, int[][] memo) {
+        if (p3 == s3.length()) {
+            memo[p1][p2] = 1;
+            return 1;
+        }
+        
+        if (p1 == s1.length() && p2 == s2.length()) {
+            memo[p1][p2] = 0;
+            return 0;
+        }
+        
+        if(p1 < s1.length() && p2 < s2.length() && s1.charAt(p1) != s3.charAt(p3) && s2.charAt(p2) != s3.charAt(p3)) {
+            memo[p1][p2] = 0;
+            return 0;
+        }
+        
+        if (memo[p1][p2] != -1) return memo[p1][p2];
+        
+        if (p1 == s1.length()) {
+            if (s2.charAt(p2) != s3.charAt(p3)) return 0;
+            memo[p1][p2] = dfs(p1, p2 + 1, p3 + 1, memo);
+        } else if (p2 == s2.length()) {
+            if (s1.charAt(p1) != s3.charAt(p3)) return 0;
+            memo[p1][p2] = dfs(p1 + 1, p2, p3 + 1, memo);
+        } else {
+            if (s1.charAt(p1) != s3.charAt(p3)) {
+                memo[p1][p2] = dfs(p1, p2 + 1, p3 + 1, memo);
+            } else if (s2.charAt(p2) != s3.charAt(p3)) {
+                memo[p1][p2] = dfs(p1 + 1, p2, p3 + 1, memo);
+            } else {
+                memo[p1][p2] = Math.max(dfs(p1, p2 + 1, p3 + 1, memo), dfs(p1 + 1, p2, p3 + 1, memo));
+            }
+        }
+        
+        return memo[p1][p2];
+    }
+
+    /**
+     * bottom to up
+     * 把后半部分的递归当成已知 s1.charAt(p1) == s3.charAt(p3) && dfs(p1 + 1, p2, p3 + 1, memo)
+     */
+    public boolean isInterleave_v3(String s1, String s2, String s3) {
+        this.s1 = s1;
+        this.s2 = s2;
+        this.s3 = s3;
+        
+        if (s1.equals("")) return s2.equals(s3);
+        if (s2.equals("")) return s1.equals(s3);
+        if (s1.length() + s2.length() != s3.length()) return false;
+        
+        Boolean[][] memo = new Boolean[s1.length() + 1][s2.length() + 1];
+        
+        return dfs(0, 0, 0, memo);
+    }
+    
+    private boolean dfs(int p1, int p2, int p3, Boolean[][] memo) {
+        if (p3 == s3.length()) {
+            memo[p1][p2] = true;
+            return true;
+        }
+        
+        if (memo[p1][p2] != null) return memo[p1][p2];
+        
+        boolean use1 = false, use2 = false;
+        if (p1 < s1.length()) {
+            use1 = s1.charAt(p1) == s3.charAt(p3) && dfs(p1 + 1, p2, p3 + 1, memo);
+        } 
+        
+        if (p2 < s2.length()) {
+            use2 = s2.charAt(p2) == s3.charAt(p3) && dfs(p1, p2 + 1, p3 + 1, memo);
+        }
+        
+        memo[p1][p2] = use1 || use2;
+        return memo[p1][p2];
+    }
+}
+```
+
+
+
+#### 115. Distinct Subsequences
+
+```java
+import java.util.*;
+class LC115 {
+    public int numDistinct(String s, String t) {
+        int m = s.length(), n = t.length();
+        int[][] dp = new int[m+1][n+1];
+        
+        dp[0][0] = 1;
+        
+        for (int i = 0; i <= m; i++) {
+            dp[i][0] = 1;
+        }
+        
+        /**
+         * s[i] == t[j]: 1.用s[i]匹配t[j] + 不用s[i]匹配t[j]: dp[i][j] = dp[i-1][j-1] + dp[i-1][j]
+         */
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (s.charAt(i-1) == t.charAt(j-1)) {
+                    dp[i][j] = dp[i-1][j] + dp[i-1][j-1];
+                } else {
+                    dp[i][j] = dp[i-1][j];
+                }
+            }
+        }
+        
+        return dp[m][n];
+    }
+
+    public int numDistinct_memoDfs(String s, String t) {
+        int[][] memo = new int[s.length() + 1][t.length() + 1];
+        for (int[] row : memo) {
+            Arrays.fill(row, -1);
+        }
+        return dfs(s, t, 0, 0, memo);
+    }
+    
+    private int dfs(String s, String t, int is, int it, int[][] memo) {
+        if (it == t.length()) {
+            memo[is][it] = 1;
+            return 1;
+        }
+        
+        if (is == s.length()) {
+            memo[is][it] = 0;
+            return 0;
+        }
+        
+        if (memo[is][it] != -1) return memo[is][it];
+        
+        if (s.charAt(is) == t.charAt(it)) {
+            //取s的第is位 + 不取s的第is位
+            memo[is][it] = dfs(s, t, is + 1, it + 1, memo) + dfs(s, t, is + 1, it, memo);
+        } else {
+            memo[is][it] = dfs(s, t, is + 1, it, memo);
+        }
+        
+        return memo[is][it];
+    }
+}
+```
+
+
 
 
 

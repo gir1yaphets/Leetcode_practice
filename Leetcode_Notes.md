@@ -4999,8 +4999,9 @@ class LC494 {
         if (sum < S) return 0;
         
         int n = nums.length;
+	      //dp[i][j]用前i个元素能构成和为j的个数
         int[][] dp = new int[n+1][2 * sum + 1];
-        
+        //注意这里不是dp[0][0]=1,正常是以0个元素构成和为0应该是1，但是这里有sum个偏移，所以是dp[0][sum] = 1
         dp[0][sum] = 1;
         
         for (int i = 1; i <= n; i++) {
@@ -5008,7 +5009,6 @@ class LC494 {
             for (int j = 0; j < 2 * sum + 1; j++) {
                 if (j + nums[i-1] < 2 * sum + 1) dp[i][j] += dp[i-1][j+nums[i-1]];
                 if (j - nums[i-1] >= 0) dp[i][j] += dp[i-1][j-nums[i-1]];
-                // dp[i][j] = dp[i-1][j-nums[i-1]] + dp[i-1][j+nums[i-1]];
             }
         }
         
@@ -5335,6 +5335,88 @@ public class LC309 {
 
 
 
+#### 312. Burst Balloons ★
+
+- ***dfs + memo***
+
+```java
+public int maxCoins_memo(int[] nums) {
+        if (nums.length == 0) return 0;
+
+        int[][] dp = new int[nums.length][nums.length];
+        return dfs(nums, 0, nums.length - 1, dp);
+    }
+    
+    private int dfs(int[] nums, int start, int end, int[][] dp) {
+        if (start > end) {
+            return 0;
+        }
+        
+        if (dp[start][end] != 0) return dp[start][end];
+        
+        int max = 0;
+        for (int i = start; i <= end; i++) {
+            //这里不能是(i-1) * i * (i + 1) 因为i-1和i+1已经被扎爆了 但是边界还在
+            max = Math.max(max, dfs(nums, start, i - 1, dp) + get(nums, i) * get(nums, start - 1) * get(nums, end + 1) + dfs(nums, i + 1, end, dp));
+        }
+        
+        dp[start][end] = max;
+        return max;
+    }
+    
+    public int get(int[] nums, int i) {
+        if (i == -1 || i == nums.length) {
+            return 1;
+        }
+        
+        return nums[i];
+    }
+```
+
+
+
+- ***dp***
+
+> dp[i][j]: 表示从i～j可以获得的最大coin
+>
+> 在i~j中找一个k不扎, 计算(i~k-1)和(k+1, j)的最大值
+
+![312](/Users/xiaoluepeng/Development/LeetCode/project/capture/312.png)
+
+```java
+/**
+     * 从小的长度开始算
+     */
+    public int maxCoins_dp(int[] nums) {
+        int n = nums.length;
+        int[] arr = new int[nums.length + 2];
+        arr[0] = 1;
+        arr[arr.length -1] = 1;
+        
+        for (int i = 0; i < nums.length; i++) {
+            arr[i+1] = nums[i];
+        }
+        
+        int[][] dp = new int[nums.length + 2][nums.length + 2];
+
+        
+        for (int l = 1; l <= n; l++) {
+            for (int i = 1; i <= n - l + 1; i++) {
+                int j = i + l - 1;
+                for (int k = i; k <= j; k++) {
+                    dp[i][j] = Math.max(dp[i][j], dp[i][k-1] + arr[k] * arr[i-1] * arr[j + 1] + dp[k+1][j]);
+                }
+            }
+        }
+        
+        return dp[1][n];
+    }
+```
+
+
+
+
+
 #### 337. House Robber III
 
 ```java
@@ -5526,6 +5608,99 @@ class LC523 {
 
 
 
+#### 712. Minimum ASCII Delete Sum for Two Strings
+
+```java
+class LC712 {
+    public int minimumDeleteSum(String s1, String s2) {
+        int[][] memo = new int[s1.length() + 1][s2.length() + 1];
+        return dfs(s1, s2, 0, 0, memo);
+    }
+    
+    private int dfs(String s1, String s2, int p1, int p2, int[][] memo) {
+        if (memo[p1][p2] != 0) return memo[p1][p2];
+        
+        if (p1 == s1.length() && p2 == s2.length()) {
+            memo[p1][p2] = 0;
+            return 0;
+        }
+        
+        int result;
+        if (p1 == s1.length()) {
+            result = s2.charAt(p2) + dfs(s1, s2, p1, p2 + 1, memo);
+        } else if (p2 == s2.length()) {
+            result = s1.charAt(p1) + dfs(s1, s2, p1 + 1, p2, memo);
+        } else {
+            result = s1.charAt(p1) == s2.charAt(p2) ? 
+                dfs(s1, s2, p1 + 1, p2 + 1, memo) : Math.min(s2.charAt(p2) + dfs(s1, s2, p1, p2 + 1, memo), s1.charAt(p1) + dfs(s1, s2, p1 + 1, p2, memo));
+        }
+        
+        memo[p1][p2] = result;
+        return result;
+    }
+
+    public int minimumDeleteSum_dp(String s1, String s2) {
+        int m = s1.length(), n = s2.length();
+        int[][] dp = new int[m + 1][n + 1];
+        
+        for (int i = 1; i <= m; i++) {
+            dp[i][0] = dp[i-1][0] + s1.charAt(i-1);
+        }
+        
+        for (int j = 1; j <= n; j++) {
+            dp[0][j] = dp[0][j-1] + s2.charAt(j-1);
+        }
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (s1.charAt(i-1) == s2.charAt(j-1)) {
+                    dp[i][j] = dp[i-1][j-1];
+                } else {
+                    dp[i][j] = Math.min(s1.charAt(i-1) + dp[i-1][j], s2.charAt(j-1) + dp[i][j-1]);
+                }
+            }
+        }
+        
+        return dp[m][n];
+    }
+}
+```
+
+
+
+#### 718. Maximum Length of Repeated Subarray ★
+
+```java
+public class LC718 {
+    /**
+     * 这道题是求最长的subarray，所以当A[i-1] != B[j-1]的时候不能连续计数
+     * dp[i][j]:以A[i-1]和B[j-1]结尾的最长subarray的长度
+     * 而且最长的subarray不一定出现在最后，所以需要用max统计中间结果
+     */
+    public int findLength(int[] A, int[] B) {
+        int m = A.length, n = B.length;
+        int[][] dp = new int[m+1][n+1];
+        
+        int max = 0;
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (A[i-1] == B[j-1]) {
+                    dp[i][j] = dp[i-1][j-1] + 1;
+                    max = Math.max(dp[i][j], max);
+                } 
+            }
+        }
+        
+        return max;
+        
+    }
+}
+```
+
+
+
+
+
 #### 740. Delete and Earn ★
 
 ```java
@@ -5606,6 +5781,56 @@ public class LC790 {
     }
 }
 ```
+
+
+
+#### 1092. Shortest Common Supersequence
+
+> 注意最长subsequence可以不连续，最长subarray必须连续
+
+![1092](/Users/xiaoluepeng/Development/LeetCode/project/capture/1092.png)
+
+```java
+class LC1092 {
+    /**
+     * 1.先求出LCS的dp
+     * 2.根据dp的关系找到common和unique
+     */
+    public String shortestCommonSupersequence(String str1, String str2) {
+        int m = str1.length(), n = str2.length();
+        int[][] dp = new int[m+1][n+1];
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                dp[i][j] = str1.charAt(i - 1) == str2.charAt(j - 1) ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+            }
+        }
+        
+        int p1 = m, p2 = n;
+        StringBuilder sb = new StringBuilder();
+        
+        while (p1 > 0 || p2 > 0) {
+            if (p1 == 0) {
+                sb.insert(0, str2.charAt(--p2));
+            } else if (p2 == 0) {
+                sb.insert(0, str1.charAt(--p1));
+            } else if (str1.charAt(p1 - 1) == str2.charAt(p2 - 1)) {
+                sb.insert(0, str1.charAt(--p1));
+                p2--;
+            } else if (dp[p1][p2] == dp[p1 - 1][p2]) {
+                //如果dp[p1][p2] == dp[p1-1][p2]说明str1.charAt(p1-1)没有common string增加，这一位是单独的
+                sb.insert(0, str1.charAt(--p1));
+            } else if (dp[p1][p2] == dp[p1][p2 - 1]) {
+                sb.insert(0, str2.charAt(--p2));
+            }
+        }
+        
+        return sb.toString();
+    }
+}
+```
+
+
 
 
 
@@ -5712,6 +5937,53 @@ class LC1105 {
 
 
 
+#### 1187. Make Array Strictly Increasing ★
+
+```java
+class LC1187 {
+    public int makeArrayIncreasing(int[] arr1, int[] arr2) {
+        Arrays.sort(arr2);
+        int k = 1;
+        for (int i = 1; i < arr2.length; i++) {
+            if (arr2[i] != arr2[i-1]) arr2[k++] = arr2[i];
+        }
+        
+        int[][] memo = new int[arr1.length + 1][arr2.length + 1];
+        for (int[] row : memo) {
+            Arrays.fill(row, Integer.MAX_VALUE);
+        }
+        
+        int op = dfs(arr1, arr2, 0, 0, -1, memo);
+        
+        return op >= arr2.length ? -1 : op;
+    }
+    
+    private int dfs(int[] arr1, int[] arr2, int p1, int p2, int prev, int[][] memo) {
+        if (p1 == arr1.length) {
+            return 0;
+        }
+        
+        if (memo[p1][p2] != Integer.MAX_VALUE) return memo[p1][p2];
+        
+        int min = arr2.length;
+        if (arr1[p1] > prev) {
+            min = dfs(arr1, arr2, p1 + 1, p2, arr1[p1], memo);
+        } 
+        
+        while (p2 < arr2.length && arr2[p2] <= prev) p2++;
+
+        if (p2 < arr2.length) {
+            min = Math.min(1 + dfs(arr1, arr2, p1 + 1, p2 + 1, arr2[p2], memo), min);
+        }
+        
+        memo[p1][p2] = min;
+        return min;
+    }
+}
+```
+
+
+
 
 
 #### 1191. K-Concatenation Maximum Sum ★
@@ -5751,6 +6023,33 @@ public class LC1191 {
         }
         
         return ans;
+    }
+}
+```
+
+
+
+#### 1262. Greatest Sum Divisible by Three ★
+
+```java
+public class LC1262 {
+    /**
+     * dp[i]: 存储nums中的和对3取余的最大值 e.g dp[1]: nums中对3取余等于1的最大值 ,[1,3,4] nums[1] = 1 + 3 = 4
+     */
+    public int maxSumDivThree(int[] nums) {
+        int[] dp = {0, Integer.MIN_VALUE, Integer.MIN_VALUE};
+        
+        for (int num : nums) {
+            int[] next = new int[3];
+            for (int i = 0; i < 3; i++) {
+                //如果(i+num)%3 == 1 那么(dp[i] + num)取余也等于1，e.g i = 2, num = 5, dp[2]中存储的是对3取余等于2的最大值比如等于10，(2+5) % 3 == 1那么10%3也等于1
+                //因为dp[i] = i * k
+                next[(i + num) % 3] = Math.max(dp[(i + num) % 3], dp[i] + num);
+            }
+            dp = next;
+        }
+        
+        return dp[0];
     }
 }
 ```

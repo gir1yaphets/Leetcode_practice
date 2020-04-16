@@ -29,4 +29,37 @@ class LC221 {
         
         return max * max;
     }
+
+    /**
+     * 通用方法: 枚举i,j每一行每一列，然后枚举k表示以i，j为起点的k为边长的矩形
+     * dp[i][j]统计i*j矩形的和，这样避免每次都需要对边长为k的矩形再check是否都是1
+     */
+    public int maximalSquare_common(char[][] matrix) {
+        if (matrix == null || matrix.length == 0) return 0;
+        int m = matrix.length, n = matrix[0].length;
+        int[][] dp = new int[m+1][n+1];
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                dp[i][j] = matrix[i-1][j-1] - '0' + dp[i-1][j] + dp[i][j-1] - dp[i-1][j-1];
+            }
+        }
+        
+        int max = 0;
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                for (int k = Math.min(m-i, n-j); k > 0; k--) {
+                    int sum = dp[i+k][j+k] - dp[i][j+k] - dp[i+k][j] + dp[i][j];
+                    
+                    if (sum == k * k) {
+                        max = Math.max(sum, max);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return max;
+    }
 }

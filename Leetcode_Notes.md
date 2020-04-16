@@ -103,6 +103,10 @@
   + 堆插入元素：将元素插入到堆的尾部，然后进行堆化过程，即和它的左右节点比较，最终将其放到正确的位置上
   + 堆删除元素：删除头节点(可以理解为PQ.poll()操作)，将堆的最后一个元素移动到头部，然后开始进行堆化，将这个元素调整到正确的位置
   + 链接: https://blog.csdn.net/u011635492/article/details/83046477
+  
++ 当遇到数据规模特别大的数需要mod 10^9的时候，先用long存储结果，再取余
+
+  
 
 
 
@@ -4352,6 +4356,53 @@ class LC320 {
 
 
 
+**Case 1: House Robber**
+
+- 分析: 当前的选或者不选，dp[i]只和dp[i-1], dp[i-2]有关
+- dp状态: dp[i]表示到第i个房子可以获得的最大利润
+- 递推公式: dp[i] = max(dp[i-1] + dp[i-2] + nums[i-1])
+- 相关题号: 213 309 740 790 801
+
+
+
+**Case2: Word Break**
+
+- 分析: 找分割点问题，dp[i]表示以i为长度的字符串可否拆分,那么可以看从0～i长度中是否存在一个点j使得0~j可以拆分，并且字符串(j+1, i)也在dict中
+- dp状态: dp[i]表示以i为长度的字符串是否可以被分割
+- 递推公式: `dp[i] = dp[j] && dict.contains(sub(j+1, i))`
+- 相关题号: 139 140 818
+
+
+
+**Case 3: LIS**
+
+- 分析: dp[i]依赖于之前(0, i-1)的结果, 如果存在某个j满足nums[j] < nums[i]的话dp[i]就能从dp[j]的结果更新过来
+- dp状态: dp[i]表示以i为长度的数组中最长的上升子序列
+- 递推公式: `if (nums[i] > nums[j]) dp[i] = max(dp[i], dp[j] + 1) j: [0, i-1]`
+- 相关题号: 673 1048
+
+
+
+**Case 4: Edit Distance**
+
+- 分析: 两个字符串匹配类型，每做一次删除或者替换cost是1，将两个字符串一位一位进行比较
+- dp状态: dp[i]表示以i为长度的数组中最长的上升子序列
+- 递推公式: `dp[i][j] = min(cost + dp[i-1][j-1], Math.min(dp[i-1][j], dp[i][j-1]) + 1);`
+- 相关题号: 72,10,44,97,115,583,712,1187,1143,1092,718
+
+
+
+**Case 5: Burst Balloons**
+
+- 分析: 类似于Case2,也是分段问题，在[i, j]中间找到一点k分成[i, k-1]+[k+1, j]+单独计算k点的值
+- dp状态: `dp[i][j]表示i~j能构成的最大值`
+- 递推公式: `dp[i][j] = max(dp[i][j], dp[i][k-1] + arr[k] * arr[i-1] * arr[j + 1] + dp[k+1][j]);`
+- 相关题号: 664,1024,1039,1140,1130
+
+
+
+
+
 #### 10. Regular Expression Matching ★
 
 ```java
@@ -4914,6 +4965,32 @@ private boolean helper(String s, List<String> wordDict, int start, Boolean[] mem
 
 
 
+#### 174. Dungeon Game
+
+```java
+public class LC174 {
+    public int calculateMinimumHP(int[][] dun) {
+        int m = dun.length, n = dun[0].length;
+        int[][] dp = new int[m + 1][n + 1]; //dp[i][j]表示到达(i,j)需要的最小hp值，不需要管正数
+        
+        for (int[] row : dp) Arrays.fill(row, Integer.MAX_VALUE);
+        dp[m][n-1] = dp[m-1][n] = 1;
+        
+        for (int i = m - 1; i >= 0; i--) {
+            for (int j = n - 1; j >= 0; j--) {
+                dp[i][j] = Math.max(Math.min(dp[i+1][j], dp[i][j+1]) - dun[i][j], 1); //如果减完以后是负数，说明dun[i][j]是正数，直接更新成1，即有1点hp就能到达这个点
+            }
+        }
+        
+        return dp[0][0];
+    }
+}
+```
+
+
+
+
+
 #### 322. Coin Change 
 
 > 背包问题
@@ -5415,8 +5492,6 @@ public int maxCoins_memo(int[] nums) {
 
 
 
-
-
 #### 337. House Robber III
 
 ```java
@@ -5490,6 +5565,8 @@ public class LC337 {
 >
 > 由它左，上，左上三个点中的最小值决定，最小值+1就是当前点的最大边长
 
+![221](/Users/xiaoluepeng/Development/LeetCode/project/capture/221.png)
+
 ```java
 class Solution {
     public int maximalSquare(char[][] matrix) {
@@ -5519,6 +5596,45 @@ class Solution {
         return max * max;
     }
 }
+```
+
+
+
+![221_common](/Users/xiaoluepeng/Development/LeetCode/project/capture/221_common.png)
+
+```java
+/**
+     * 通用方法: 枚举i,j每一行每一列，然后枚举k表示以i，j为起点的k为边长的矩形
+     * dp[i][j]统计i*j矩形的和，这样避免每次都需要对边长为k的矩形再check是否都是1
+     */
+    public int maximalSquare_common(char[][] matrix) {
+        if (matrix == null || matrix.length == 0) return 0;
+        int m = matrix.length, n = matrix[0].length;
+        int[][] dp = new int[m+1][n+1];
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                dp[i][j] = matrix[i-1][j-1] - '0' + dp[i-1][j] + dp[i][j-1] - dp[i-1][j-1];
+            }
+        }
+        
+        int max = 0;
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                for (int k = Math.min(m-i, n-j); k > 0; k--) {
+                    int sum = dp[i+k][j+k] - dp[i][j+k] - dp[i+k][j] + dp[i][j];
+                    
+                    if (sum == k * k) {
+                        max = Math.max(sum, max);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return max;
+    }
 ```
 
 
@@ -5605,6 +5721,37 @@ class LC523 {
     }
 }
 ```
+
+
+
+#### 525. Contiguous Array
+
+```java
+class Solution {
+    public int findMaxLength(int[] nums) {
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] == 0) nums[i] = -1;
+        }
+        
+        Map<Integer, Integer> sumToIndex = new HashMap<>();
+        sumToIndex.put(0, -1);
+        int sum = 0, max = 0;
+        
+        for (int i = 0; i < nums.length; i++) {
+            sum += nums[i];
+            if (sumToIndex.containsKey(sum)) {
+                max = Math.max(max, i - sumToIndex.get(sum));
+            } else {
+                sumToIndex.put(sum, i);
+            }
+        }
+        
+        return max;
+    }
+}
+```
+
+
 
 
 
@@ -5781,6 +5928,38 @@ public class LC790 {
     }
 }
 ```
+
+
+
+#### 1043. Partition Array for Maximum Sum ★
+
+![1043](/Users/xiaoluepeng/Development/LeetCode/project/capture/1043.png)
+
+```java
+
+public class LC1043 {
+    /**
+     * dp[i]:前i个元素分组后构成的最大值
+     * dp[i] = max(dp[i], dp[i-k] + k * max([i-k, i]))
+     */
+    public int maxSumAfterPartitioning(int[] A, int K) {
+        int n = A.length;
+        int[] dp = new int[n + 1];
+        
+        for (int i = 1; i <= n; i++) {
+            int max = Integer.MIN_VALUE;
+            for (int j = 1; j <= Math.min(i, K); j++) {
+                max = Math.max(max, A[i - j]);
+                dp[i] = Math.max(dp[i], dp[i-j] + max * j);
+            }
+        }
+        
+        return dp[n];
+    }
+}
+```
+
+
 
 
 
@@ -6121,6 +6300,95 @@ public class LC1269 {
 ```
 
 
+
+#### 1277. Count Square Submatrices with All Ones(#221)
+
+```java
+/**
+ * 和221题一样，dp[i][j] = min(左, 上，左上) + 1 既代表了当前点(i,j)能构成的正方形的最大边长，又代表了到(i,j)点新增加了几个正方形
+ */
+class LC1277 {
+    public int countSquares(int[][] matrix) {
+        if (matrix == null || matrix.length == 0) return 0;
+        int m = matrix.length, n = matrix[0].length;
+        
+        int[][] dp = new int[m][n];
+        int res = 0;
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (matrix[i][j] == 0) continue;
+                
+                if (i == 0 || j == 0) {
+                    dp[i][j] = 1;
+                } else {
+                    dp[i][j] = Math.min(Math.min(dp[i-1][j], dp[i][j-1]), dp[i-1][j-1]) + 1;
+                }
+                
+                res += dp[i][j];
+            }
+        }
+        
+        return res;
+    }
+}
+```
+
+
+
+
+
+#### 1278. Palindrome Partitioning III
+
+```java
+class LC1278 {
+    public static void main(String[] args) {
+        String s = "aabbc";
+        new LC1278().palindromePartition(s, 2);
+    }
+
+    public int palindromePartition(String s, int K) {
+        int n = s.length();
+        int[][] dp = new int[n + 1][K + 1];
+        int[][] cache = new int[n][n];
+        char[] ca = s.toCharArray();
+        
+        for (int[] row : cache) Arrays.fill(row, -1);
+
+        for (int k = 1; k <= K; k++) {
+            for (int i = k; i <= n; i++) {
+                //k = 1需要单独算，即i个元素分成1组
+                if (k == 1) {
+                    dp[i][1] = makePalindrome(ca, 0, i - 1, cache);
+                } else {
+                    dp[i][k] = Integer.MAX_VALUE;
+                    for (int j = k - 1; j < i; j++) {
+                        dp[i][k] = Math.min(dp[i][k], dp[j][k-1] + makePalindrome(ca, j, i - 1, cache));
+                    }
+                }
+            }
+        }
+        
+        return dp[n][K];
+    }
+    
+    private int makePalindrome(char[] ca, int start, int end, int[][] cache) {
+        if (cache[start][end] != -1) return cache[start][end];
+        
+        int l = start, r = end;
+        int cost = 0;
+        while (l < r) {
+            if (ca[l++] != ca[r--]) {
+                cost += 1;
+            }
+        }
+        
+        
+        cache[start][end] = cost;
+        return cost;
+    }
+}
+```
 
 
 
@@ -6786,6 +7054,73 @@ class LC1032 {
 ### 10. Stack
 
 ---
+
+- 单调栈: 当找右边比自己大的数字的时候用递减栈，找右边比自己小的数的时候用递增栈
+
+
+
+#### 84. Largest Rectangle in Histogram
+
+```java
+class LC84 {
+    public int largestRectangleArea(int[] heights) {
+        int n = heights.length;
+        Stack<Integer> stack = new Stack<>();
+        int max = 0;
+        
+        //为了方便计算
+        stack.push(-1);
+        for (int i = 0; i < n; i++) {
+            //做一个单调递增栈，遇到一个新的较小的值说明之前的某些较大值找到了左边和右边的边界，对其计算面积
+            while (stack.peek() != -1 && heights[stack.peek()] >= heights[i]) {
+                int h = heights[stack.pop()];
+                int w = i - stack.peek() - 1;
+                max = Math.max(max, h * w);
+            }
+            
+            stack.push(i);
+        }
+        
+        while (stack.peek() != -1) {
+            max = Math.max(max, heights[stack.pop()] * (n - stack.peek() - 1));
+        }
+        
+        return max;
+    }
+}
+```
+
+
+
+
+
+#### 503. Next Greater Element II
+
+```java
+class LC503 {
+    public int[] nextGreaterElements(int[] nums) {
+        int n = nums.length;
+        int[] res = new int[n];
+        Arrays.fill(res, -1);
+        
+        if (n == 0) return new int[n];
+        
+        Stack<Integer> stack = new Stack<>();
+        
+        for (int i = 0; i < 2 * n; i++) {
+            while (!stack.isEmpty() && nums[stack.peek()] < nums[i % n]) {
+                res[stack.pop()] = nums[i % n];
+            }
+
+            stack.push(i % n);
+        }        
+        
+        return res;
+    }
+}
+```
+
+
 
 
 

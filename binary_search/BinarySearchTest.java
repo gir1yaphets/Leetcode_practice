@@ -1,9 +1,10 @@
 class BinarySearchTest {
     public static void main(String[] args) {
         // int[] test1 = {1,3,5,7,9};
-        int[] test2 = {1,3,3,3,3};
+        int[] test2 = {1,3,3,3,3,4};
 
-        int res = binarySearch(test2, 3);
+        // int res = binarySearch(test2, 3);
+        int res = searchLastEqual(test2, 3);
         System.out.println(res);
     }
 
@@ -20,6 +21,22 @@ class BinarySearchTest {
                 r = mid - 1;
             } else {
                 l = mid + 1;
+            }
+        }
+
+        return l;
+    }
+
+    public static int searchLastEqual(int[] array, int target) {
+        int l = 0, r = array.length;
+
+        while (l < r) {
+            int mid = l + (r - l) / 2;
+
+            if (array[mid] <= target) {
+                l = mid + 1;
+            } else {
+                r = mid;
             }
         }
 

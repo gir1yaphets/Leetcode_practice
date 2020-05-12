@@ -1,4 +1,5 @@
-class Solution {
+import java.util.*;
+class LC77 {
     private List<List<Integer>> res = new ArrayList<>();
     
     public List<List<Integer>> combine(int n, int k) {

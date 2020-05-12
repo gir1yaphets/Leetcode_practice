@@ -1,4 +1,4 @@
-public class LC278 extends VersionControl {
+public class LC278 {
     public int firstBadVersion(int n) {
         int start = 1, end = n;
         
@@ -13,5 +13,9 @@ public class LC278 extends VersionControl {
         }
         
         return start;
+    }
+
+    public boolean isBadVersion(int v) {
+        return true;
     }
 }

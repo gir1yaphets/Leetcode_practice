@@ -1,4 +1,5 @@
-class Solution {
+import java.util.*;
+class LC784 {
     private List<String> res = new ArrayList<>();
     
     public List<String> letterCasePermutation_mine(String S) {

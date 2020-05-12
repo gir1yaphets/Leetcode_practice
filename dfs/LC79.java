@@ -1,4 +1,4 @@
-class Solution {
+class LC79 {
     private int[][] dir = {
         {1, 0},
         {-1, 0},

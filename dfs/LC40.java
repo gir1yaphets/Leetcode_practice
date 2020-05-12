@@ -1,4 +1,5 @@
-class Solution {
+import java.util.*;
+class LC40 {
     private List<List<Integer>> res = new ArrayList<>();
     
     public List<List<Integer>> combinationSum2(int[] candidates, int target) {

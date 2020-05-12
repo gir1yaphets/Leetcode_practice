@@ -2,7 +2,8 @@
  * T: O(2^n) 对于每一个数字，可以选或者不选，既有两种选择
  * S: O(n) 最多的递归层数是每一个数字都选
  */
-class Solution {
+import java.util.*;
+class LC78 {
     private List<List<Integer>> res = new ArrayList<>();
     
     public List<List<Integer>> subsets(int[] nums) {

@@ -1,3 +1,4 @@
+import java.util.*;
 class LC621 {
     public int leastInterval(char[] tasks, int n) {
         //先按照字母个数进行排序 个数最多的在最后

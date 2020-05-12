@@ -1,5 +1,5 @@
 import java.util.*;
-class Solution {
+class LC934 {
     private int[][] dir = {
         {1, 0},
         {-1, 0},

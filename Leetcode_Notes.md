@@ -106,7 +106,7 @@
   
 + 当遇到数据规模特别大的数需要mod 10^9的时候，先用long存储结果，再取余
 
-  
++ 统计前n项和pre sum的时候index最好从1开始，留出一个offset，从1开始，这样统计i~j之间有几个数字的时候，len = sums[j] - sums[i]，并不需要+1
 
 
 
@@ -1397,6 +1397,55 @@ class LC1123 {
     }
 }
 ```
+
+
+
+#### 1373. Maximum Sum BST in Binary Tree
+
+```java
+public class LC1373 {
+    class Node {
+        int lower;
+        int upper;
+        int sum;
+        
+        public Node(int l, int u, int s) {
+            lower = l;
+            upper = u;
+            sum = s;
+        }
+    }
+    
+    private int max = 0;
+    
+    public int maxSumBST(TreeNode root) {
+        dfs(root);
+        return max;
+    }
+    
+    private Node dfs(TreeNode root) {
+        if (root == null) return new Node(Integer.MAX_VALUE, Integer.MIN_VALUE, 0);
+        
+        Node left = dfs(root.left);
+        Node right = dfs(root.right);
+        
+        //当走到最末端的null节点的时候并没有返回null，只有当不满足bst的时候向上一直返回null
+        if (!(left != null && right != null && root.val > left.upper && root.val < right.lower)) {
+            return null;
+        }
+
+        int sum = root.val + left.sum + right.sum;
+        max = Math.max(max, sum);
+        
+        int lower = Math.min(root.val, right.lower);
+        int upper = Math.max(root.val, left.upper);
+        
+        return new Node(lower, upper, sum);
+    }
+}
+```
+
+
 
 
 
@@ -3729,6 +3778,106 @@ class LC267 {
 
 
 
+#### 282. Expression Add Operators ★
+
+```java
+import java.util.*;
+
+class LC282 {
+    private List<String> res = new ArrayList<>();
+    
+    public List<String> addOperators(String num, int target) {
+        dfs(num, 0, target, "", 0, 1);
+        return res;
+    }
+    
+    private void dfs(String num, int index, int target, String path, long result, long multi) {
+        if (index == num.length()) {
+            if (result == target) {
+                res.add(path);
+            }
+            return;
+        }
+        
+
+        for (int i = index; i < num.length(); i++) {
+            long curr = Long.parseLong(num.substring(index, i + 1));
+            
+            if (i > index && num.charAt(index) == '0') break;
+            
+            if (index == 0) {
+                dfs(num, i + 1, target, curr + "", curr, curr);
+            } else {
+                dfs(num, i + 1, target, path + "+" + curr, result + curr, curr);
+                
+                dfs(num, i + 1, target, path + "-" + curr, result - curr, -curr);
+                
+                //比如3+4*5，在上一步中会先算result 3+4=7 但是遇到乘法要先算乘，所以result需要减去上一步的数字 再用上一步的数字乘以这一次的数即(7-4) + 4 *5 = 23
+                dfs(num, i + 1, target, path + "*" + curr, result - multi + multi * curr, multi * curr);
+            }
+        }
+    }
+
+    /**
+     * 优化版本: 
+     * 1.用exp数组存储expression,避免了用一个string path在递归中进行反复拷贝
+     * 2.用n = 10 *n + nums[i] 避免了反复取substring
+     */
+    private List<String> path = new ArrayList<>();
+    
+    public List<String> addOperators_better(String num, int target) {
+        char[] exp = new char[num.length() * 2];
+        dfs(num.toCharArray(), target, 0, exp, 0, 0, 0);
+        return path;
+    }
+    
+    private void dfs(char[] num, int target, int pos, char[] exp, int len, long curr, long pre) {
+        if (pos == num.length) {
+            if (curr == target) {
+                path.add(new String(exp, 0, len));
+            }
+            return;
+        }
+        
+        long n = 0;
+        int l = len;
+        
+        int index = len;
+        //如果pos != 0,说明这次不是第一个数，需要先填运算符号 但这个时候不能len++ 否则这个运算符号不能被回溯调，一直被记录在当前层
+        if (pos != 0) {
+            index = len + 1;
+        }
+        
+        for (int i = pos; i < num.length; i++) {
+            if (i > pos && num[pos] == '0') break;
+            
+            n = n * 10 + (num[i] - '0');
+            
+            if (n > Integer.MAX_VALUE) break;
+
+            //这里需要在当前层+1，目的是为了保留之前的数字，比如123，在当前层加一以后可以记录1, 12, 123
+            exp[index++] = num[i];
+            if (pos == 0) {
+                dfs(num, target, i + 1, exp, index, n, n);
+            } else {
+                exp[l] = '+';
+                dfs(num, target, i + 1, exp, index, curr + n, n);
+                
+                exp[l] = '-';
+                dfs(num, target, i + 1, exp, index, curr - n, -n);
+                
+                exp[l] = '*';
+                dfs(num, target, i + 1, exp, index, curr - pre + pre * n, pre * n);
+            }
+        }
+    }
+}
+```
+
+
+
+
+
 #### 291. Word Pattern II
 
 ```java
@@ -5639,6 +5788,78 @@ class Solution {
 
 
 
+#### 265. Paint House II ★
+
+```java
+import java.util.*;
+
+public class LC265 {
+    public int minCostII_NK2(int[][] costs) {
+        if (costs == null || costs.length == 0) return 0;
+        int m = costs.length, n = costs[0].length;
+        //dp[i][j]表示第i间房子使用第j个color能获得的最小值
+        int[][] dp = new int[m][n];
+        
+        for (int[] row : dp) Arrays.fill(row, Integer.MAX_VALUE);
+
+        int min = Integer.MAX_VALUE;
+        for (int i = 0; i < n; i++) {
+            dp[0][i] = costs[0][i];
+            min = Math.min(min, dp[0][i]);
+        }
+        
+        for (int i = 1; i < m; i++) {
+            min = Integer.MAX_VALUE;
+            for (int j = 0; j < n; j++) {
+                for (int k = 0; k < n; k++) {
+                    if (j == k) continue;
+                    
+                    dp[i][j] = Math.min(dp[i][j], costs[i][j] + dp[i-1][k]);
+                }
+                min = Math.min(min, dp[i][j]);
+            }
+        }
+        
+        return min;
+    }
+
+    public int minCostII_NK(int[][] costs) {
+        if (costs == null || costs.length == 0) return 0;
+        int m = costs.length, n = costs[0].length;
+        
+        //记录之前的最小值和第二小值，如果这次要用的color index和之前最小值的index一样，那么这个当前这个house如果使用这个color只能从之前第二小的值转移过来
+        int preMin = 0, preSecMin = 0, minIndex = -1;
+        
+        for (int i = 0; i < m; i++) {
+            int min = Integer.MAX_VALUE, secMin = Integer.MAX_VALUE, index = -1;
+            for (int j = 0; j < n; j++) {
+                int cost = costs[i][j] + (j == minIndex ? preSecMin : preMin);
+                
+                if (cost < min) {
+                    secMin = min;
+                    min = cost;
+                    index = j;
+                } else if (cost < secMin) {
+                    secMin = cost;
+                }
+            }
+            
+            minIndex = index;
+            preMin = min;
+            preSecMin = secMin;
+        }
+        
+        return preMin;
+    }
+}
+```
+
+
+
+
+
+
+
 ##### 7.1 Pre sum问题
 
 ###### 560. Subarray Sum Equals K
@@ -5753,6 +5974,245 @@ class Solution {
 
 
 
+#### 656. Coin Path ★
+
+```java
+public class LC656 {
+    public List<Integer> cheapestJump(int[] A, int B) {
+        int n = A.length;
+        int[] memo = new int[n], next = new int[n];
+        
+        Arrays.fill(memo, -1);
+        Arrays.fill(next, -1);
+
+        List<Integer> path = new ArrayList<>();
+        path.add(1);
+        
+        dfs(A, B, 0, next, memo);
+        
+        for (int i = 0; i < A.length && next[i] >= 0; i = next[i]) {
+            path.add(next[i] + 1);
+        }
+        
+        //判断这条路径是否走到了最后
+        if (path.contains(A.length)) {
+            return path;
+        }
+        
+        return new ArrayList<>();
+    }
+    
+    /**
+     * next[i]记录当前从当前index开始 下一步跳到哪个index能保证cost最小
+     */
+    private int dfs(int[] A, int B, int index, int[] next, int[] memo) {
+        //这里为什么是index == A.length - 1不太清楚 
+        //如果是index == A.length A = [0,0,0,0,0,0] B = 3这个case过不了
+        if (index == A.length - 1) return 0; 
+        
+        if (memo[index] != -1) return memo[index];
+        
+        int minCost = Integer.MAX_VALUE;
+        int minIndex = -1;
+        
+        for (int i = 1; i <= B; i++) {
+            if (index + i < A.length && A[index + i] != -1) {
+                int cost = dfs(A, B, index + i, next, memo);
+                if (minCost > cost) {
+                    minCost = cost;
+                    minIndex = index + i;
+                }
+            }            
+        }
+        
+        next[index] = minIndex;
+        memo[index] = A[index] + minCost;
+        
+        return memo[index];
+    }
+
+    public List<Integer> cheapestJump_dp(int[] A, int B) {
+        int n = A.length;
+        int[] dp = new int[n];
+        int[] path = new int[n];
+        int[] len = new int[n]; //记录到i的时候 最短距离的数组长度 数组长度越长说明排序越小
+        
+        Arrays.fill(dp, Integer.MAX_VALUE);
+        Arrays.fill(path, -1);
+        
+        dp[0] = 0;
+        
+        for (int i = 0; i < n; i++) {
+            if (A[i] == -1) continue;
+            for (int j = Math.max(0, i-B); j < i; j++) {
+                if (A[j] == -1) continue;
+                
+                int cost = A[i] + dp[j];
+                if (cost < dp[i] || cost == dp[i] && len[i] < len[j] + 1) {
+                    dp[i] = cost;
+                    path[i] = j;
+                    len[i] = len[j] + 1;
+                }
+            }
+        }
+        
+        List<Integer> res = new ArrayList<>();
+        
+        for (int cur = n - 1; cur >= 0; cur = path[cur]) res.add(0, cur + 1);
+        
+        return res.get(0) != 1 ? Collections.emptyList() : res;
+    }
+}
+```
+
+
+
+
+
+#### 689. Maximum Sum of 3 Non-Overlapping Subarrays
+
+```java
+import java.util.*;
+class LC689 {
+    /**
+     * 思路：先固定中间subarray起点的范围，然后根据预先求出的左边右边最大subarray的和求出总的最大的subarray
+     */
+    public int[] maxSumOfThreeSubarrays(int[] nums, int k) {
+        int len = nums.length;
+        int n = len - k + 1;
+        int[] dp = new int[n]; //total count of subarray
+        int[] left = new int[n], right = new int[n]; //left[i]表示左边到i和最大的subarray的起点index
+        
+        int sum = 0;
+        for (int i = 0; i < len; i++) {
+            sum += nums[i];
+            
+            if (i >= k) {
+                sum -= nums[i - k];
+            }
+            
+            if (i >= k - 1) {
+                dp[i - k + 1] = sum;
+            }
+        }
+        
+        int lmax = 0;
+        for (int i = 0; i < n; i++) {
+            if (dp[lmax] < dp[i]) {
+                lmax = i;
+            }
+            
+            left[i] = lmax;
+        }
+        
+        int rmax = n - 1;
+        for (int i = n - 1; i >= 0; i--) {
+            //注意因为要求最小字典序，所以这里要有等号
+            if (dp[rmax] <= dp[i]) {
+                rmax = i;
+            }
+            
+            right[i] = rmax;
+        }
+        
+        int[] res = new int[3];
+        Arrays.fill(res, -1);
+        //中间subarray起点的范围[k, n - k)
+        for (int i = k; i < n - k; i++) {
+            //如果中间起点在i，左边的最大起点在i-k, 而从左边开始和最大的subarray的起点存在left数组中，直接到dp中查找sum
+            //e.g 比如k = 2,当前中间subarray起点在index = 3，那么左边最大的起点可以取到index = 1(左边窗口[1,2])，右边可以取index = 5(中间窗口[3,4])
+            if (res[0] == -1 || dp[res[0]] + dp[res[1]] + dp[res[2]] < dp[i] + dp[left[i-k]] + dp[right[i+k]]) {
+                res[0] = left[i-k];
+                res[1] = i;
+                res[2] = right[i+k];
+            }
+        }
+                                                
+        return res;
+    }
+
+    /**
+     * ----------------------------------------------------------
+     */
+    private int[] presum;
+    private int[] res;
+    private int[] memo;
+
+    /**
+     * 无法确定当前这个index到底属于哪一个区间
+     * {1,2,1,2,6,7,5,1} 如果最后一个区间是(6,7)最后的区间和是13，如果是(7,5)和是12
+     * 但是如果把6放到第二个区间的话 总的和会更大
+     */
+    public int[] maxSumOfThreeSubarrays_wrong(int[] nums, int k) {
+        int n = nums.length;
+        presum = new int[n + 1];
+        memo = new int[n];
+        
+        for (int i = 1; i <= n; i++) presum[i] = presum[i-1] + nums[i-1];
+        
+        res = new int[3];
+        dfs(nums, k, 0, 3);
+        return res;
+    }
+    
+    private int dfs(int[] nums, int k, int index, int left) {
+        if (index + k * left > nums.length) return 0;
+        if (left == 0) {
+            return 0;
+        }
+        
+        if (memo[index] != 0) return memo[index];
+
+        int sum = 0;
+        for (int i = index; i <= nums.length - k * left; i++) {
+            int curr = presum[i+k] - presum[i] + dfs(nums, k, i + k, left - 1);
+            
+            if (curr > sum) {
+                sum = curr;
+                res[3 - left] = i;
+            }
+        }
+        
+        //这个sum只是到当前的最大值，并不能保证总的和最大
+        return memo[index] = sum;
+    }
+
+    private int max;
+    
+    public int[] maxSumOfThreeSubarrays_TLE(int[] nums, int k) {
+        int n = nums.length;
+        presum = new int[n + 1];
+        for (int i = 1; i <= n; i++) presum[i] = presum[i-1] + nums[i-1];
+        
+        res = new int[3];
+        dfs(nums, k, 0, 3, 0, new ArrayList<>());
+        return res;
+    }
+    
+    private void dfs(int[] nums, int k, int index, int left, int curr, List<Integer> list) {
+        if (index + k * left > nums.length) return;
+        if (left == 0) {
+            if (curr > max) {
+                max = curr;
+                for (int i = 0; i < 3; i++) {
+                    res[i] = list.get(i);
+                }
+            }
+            return;
+        }
+        
+        for (int i = index; i <= nums.length - k * left; i++) {
+            list.add(i);
+            dfs(nums, k, i + k, left - 1, curr + presum[i+k] - presum[i], list);
+        }
+        
+        list.remove(list.size() - 1);
+    }
+}
+```
+
+
+
 
 
 #### 712. Minimum ASCII Delete Sum for Two Strings
@@ -5846,6 +6306,62 @@ public class LC718 {
 
 
 
+#### 730. Count Different Palindromic Subsequences (hard)
+
+![730_1](/Users/xiaoluepeng/Development/LeetCode/project/capture/730_1.png)
+
+
+
+![730_2](/Users/xiaoluepeng/Development/LeetCode/project/capture/730_2.png)
+
+
+
+```java
+class LC730 {
+    private int mod = 1000000007;
+    public int countPalindromicSubsequences(String s) {
+        int n = s.length();
+        int[][] memo = new int[n][n];
+        
+        return (int) dfs(s, 0, n - 1, memo);
+    }
+    
+    private long dfs(String s, int l, int r, int[][] memo) {
+        if (l > r) return 0;
+        if (l == r) return 1;
+        
+        if (memo[l][r] != 0) return memo[l][r];
+
+        long count = 0;
+        if (s.charAt(l) == s.charAt(r)) {
+            int i = l + 1, j = r - 1;
+            //向中间找是否存在和两边的字母一样的
+            while (i <= j && s.charAt(i) != s.charAt(l)) i++;
+            while (i <= j && s.charAt(j) != s.charAt(r)) j--;
+
+            //如果最中间的字母和两边字母一样，需要从2 * dfs + 2中减去1个
+            if (i == j) {
+                count = 2 * dfs(s, l + 1, r - 1, memo) + 1;
+            } else if (i > j) {
+                count = 2 * dfs(s, l + 1, r - 1, memo) + 2;
+            } else {
+                //如果存在和中间的字母和两边字母一样，并且还不是在中间，需要减去中间不一样字母的解的个数 具体见md截图
+                count = 2 * dfs(s, l + 1, r - 1, memo) - dfs(s, i + 1, j - 1, memo);
+            }
+        } else {
+            count = dfs(s, l + 1, r, memo) + dfs(s, l, r - 1, memo) - dfs(s, l + 1, r - 1, memo);
+        }
+        
+        
+        return memo[l][r] = (int) ((count + mod) % mod);
+    }
+}
+```
+
+
+
+
+
 
 
 #### 740. Delete and Earn ★
@@ -5866,6 +6382,7 @@ public class LC740 {
         
         int[] arr = new int[max + 1];
         
+        //计算num构成的最大值是多少，因为相同的可以全取，所以就是统计某个数num的和
         for (int num : nums) {
             arr[num] += num;
         }
@@ -5928,6 +6445,36 @@ public class LC790 {
     }
 }
 ```
+
+
+
+#### 956. Tallest Billboard ★
+
+> *非降维dp[i][j]没写明白, 写不动了, 有空再看看*
+
+```java
+class LC956 {
+    public int tallestBillboard(int[] rods) {
+        //dp[i][j]表示使用前i个rod，高度差为j能达到的最大公共高度
+        int[] dp = new int[5001];
+        for (int d = 1; d < 5001; d++) dp[d] = -10000;
+        for (int x : rods) {
+            //注意这里不能直接用curr = dp 否则是同一个数组的引用，互相干扰
+            int[] curr = dp.clone();
+            for (int d = 0; d + x < 5001; d++) {
+	              //把当前rod加到长的那一边， 以d+x为高度差能获得的最大公共高度
+                dp[d + x] = Math.max(dp[d + x], curr[d]);
+	              //把当前rod加到短的那一边， 以Math.abs(d-x)为高度差能获得的最大公共高度
+                dp[Math.abs(d - x)] = Math.max(dp[Math.abs(d - x)], curr[d] + Math.min(d, x));
+            }
+        }
+        
+        return dp[0];
+    }
+}
+```
+
+
 
 
 
@@ -6113,6 +6660,46 @@ class LC1105 {
     }
 }
 ```
+
+
+
+#### 1140. Stone Game II
+
+```java
+class LC1140 {
+    /**
+     * 这是二维dp，只记录一个int[] memo是不对的
+     * 需要memo[i][j]表示在di个位置取j个数能获得的最大分数
+     */
+    public int stoneGameII(int[] piles) {
+        int n = piles.length;
+        int sum = 0;
+        int[][] memo = new int[n][n];
+        for (int p : piles) sum += p;
+        int relative = dfs(piles, 0, 1, memo);
+        
+        return (relative + sum) / 2;
+    }
+    
+    private int dfs(int[] p, int index, int num, int[][] memo) {
+        if (index == p.length) return 0;
+        
+        if (memo[index][num] != 0) return memo[index][num];
+        
+        int score = Integer.MIN_VALUE;
+        for (int i = 0, sum = 0; i < 2 * num && index + i < p.length; i++) {
+            sum += p[index + i];
+            score = Math.max(score, sum - dfs(p, index + i + 1, Math.max(num, i + 1), memo));
+        }
+        
+        memo[index][num] = score;
+        
+        return score;
+    }
+}
+```
+
+
 
 
 
@@ -6389,6 +6976,429 @@ class LC1278 {
     }
 }
 ```
+
+
+
+#### 1320. Minimum Distance to Type a Word Using Two Fingers ★
+
+```java
+class LC1320 {
+    public int minimumDistance(String word) {
+        int n = word.length();
+        //记录在某个位置i的时候左手所在位置和右手所在位置需要的最小cost
+        int[][][] memo = new int[n][27][27];
+        return dfs(word, 0, 26, 26, memo);
+    }
+    
+    private int dfs(String word, int index, int l, int r, int[][][] memo) {
+        if (index == word.length()) return 0;
+        
+        if (memo[index][l][r] != 0) return memo[index][l][r];
+        
+        int c = word.charAt(index) - 'A';
+        
+        int lc = cost(l, c) + dfs(word, index + 1, c, r, memo);
+        int rc = cost(r, c) + dfs(word, index + 1, l, c, memo);
+        
+        return memo[index][l][r] = Math.min(lc, rc);
+    }
+    
+    private int cost(int a, int b) {
+        if (a == 26 || b == 26) return 0;
+        
+        int ax = a / 6, ay = a % 6;
+        int bx = b / 6, by = b % 6;
+        
+        return Math.abs(ax - bx) + Math.abs(ay - by);
+    }
+
+    /**
+     * 从第一个解法可以优化掉一维，不需要同时记录两根手指的位置，只需要记录前两次手指的位置
+     * e.g CAKE
+     * 当index在K的时候last finger记录的是C，而prev始终是index-1的位置，记录的是A
+     * 如果K用同一根手指打的话就是从prev->curr 这个时候lastfinger还是C
+     * 如果换一个手指打的话就是当前的prev变成了lastfinger，lastfinger转移到了curr的位置
+     */
+    public int minimumDistance_2d(String word) {
+        int n = word.length();
+        int[][] memo = new int[n][27];
+        return dfs(word, 0, 26, memo);
+    }
+    
+    private int dfs(String word, int index, int lastfinger, int[][] memo) {
+        if (index == word.length()) return 0;
+        
+        if (memo[index][lastfinger] != 0) return memo[index][lastfinger];
+        
+        int prev = index == 0 ? 26 : word.charAt(index - 1) - 'A';
+        int c = word.charAt(index) - 'A';
+        
+        int samefinger = cost(prev, c) + dfs(word, index + 1, lastfinger, memo);
+        int anotherfinger = cost(lastfinger, c) + dfs(word, index + 1, prev, memo);
+        
+        return memo[index][lastfinger] = Math.min(samefinger, anotherfinger);
+    }
+
+    /**
+     * dp[i][j]表示当前在word的第i个位置并且最前面的一根手指停留在j产生的最小值
+     */
+    public int minimumDistance_dp(String word) {
+        int n = word.length();
+        int[][] dp = new int[n + 1][27];
+        
+        for (int[] row : dp) Arrays.fill(row, Integer.MAX_VALUE / 2);
+        dp[0][26] = 0;
+        int min = Integer.MAX_VALUE;
+        
+        for (int i = 0; i < n; i++) {
+            int prev = i > 0 ? word.charAt(i - 1) - 'A' : 26;
+            int curr = word.charAt(i) - 'A';
+            
+            for (int j = 0; j <= 26; j++) {
+                dp[i+1][j] = Math.min(dp[i+1][j], dp[i][j] + cost(prev, curr));
+                dp[i+1][prev] = Math.min(dp[i+1][prev], dp[i][j] + cost(j, curr));
+            }
+        }
+        
+        for (int i = 0; i <= 26; i++) {
+            min = Math.min(dp[n][i], min);
+        }        
+        
+        return min;
+    }
+}
+```
+
+
+
+
+
+#### 1340. Jump Game V
+
+```java
+import java.util.*;
+public class LC1340 {
+    /**
+     * T O(n*d) 对于每个点，它的相邻点有2d个
+     */
+    private int[] memo;
+    public int maxJumps(int[] arr, int d) {
+        int n = arr.length;
+        memo = new int[n];
+        int res = 1;
+        for (int i = 0; i < n; i++) {
+            res = Math.max(res, dfs(arr, d, i));
+        }
+        
+        return res;
+    }
+    
+    private int dfs(int[] arr, int d, int start) {
+        if (memo[start] != 0) return memo[start];
+        
+        int right = 1, left = 1;
+        for (int i = 1; i <= d; i++) {
+            if (start + i >= arr.length) break;
+            
+            //check start ~ start + i exists arr[i] >= arr[start]
+            if (arr[start + i] >= arr[start]) break;
+            
+            right = Math.max(right, 1 + dfs(arr, d, start + i));
+        }
+        
+        for (int i = 1; i <= d; i++) {
+            if (start - i < 0) break;
+            if (arr[start - i] >= arr[start]) break;
+            
+            left = Math.max(left, 1 + dfs(arr, d, start - i));
+        }
+        
+        return memo[start] = Math.max(left, right);
+    }
+
+    public int maxJumps_dp(int[] arr, int d) {
+        int n = arr.length;
+        int[] dp = new int[n];
+        int[][] sorted = new int[n][2];
+        
+        for (int i = 0; i < n; i++) {
+            sorted[i][0] = arr[i];
+            sorted[i][1] = i;
+        }
+        
+        //需要先按照高度排序，然后从高度最高的开始计算，这样保证dp[j]依赖于dp[i]的时候，由于arr[i]>arr[j] 所以dp[i]已经先被计算完了
+        Arrays.sort(sorted, (o1, o2) -> o2[0] - o1[0]);
+        Arrays.fill(dp, 1);
+        
+        for (int[] item : sorted) {
+            int i = item[1];
+            for (int j = i + 1; j <= Math.min(i + d, n - 1) && arr[i] > arr[j]; j++) {
+                dp[j] = Math.max(dp[j], 1 + dp[i]);
+            }
+            
+            for (int j = i - 1; j >= Math.max(i - d, 0) && arr[i] > arr[j]; j--) {
+                dp[j] = Math.max(dp[j], 1 + dp[i]);
+            }
+        }
+        
+        int res = 1;
+        for (int i = 0; i < n; i++) {
+            res = Math.max(res, dp[i]);
+        }        
+        
+        return res;
+    }
+}
+```
+
+
+
+#### 1349. Maximum Students Taking Exam ★
+
+> **T: O(m * 2^n)**
+
+```java
+class LC1349 {
+    public int maxStudents(char[][] seats) {
+        int m = seats.length, n = seats[0].length;
+        int state = 1 << n;
+        int[][] dp = new int[m][state];
+        int[] rowMask = new int[m];
+        
+        for (int[] row : dp) Arrays.fill(row, -1);
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                //将每一行的状态记录成一个2进制数存在rowMask中，比如.#. 那么就是101 = 5
+                rowMask[i] = ((rowMask[i] << 1) | (seats[i][j] == '.' ? 1 : 0));
+            }
+        }
+        
+        int res = 0;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < state; j++) {
+                //rowMask[i] & j != j判断当前的j是否是该行的状态
+                //j & (j >> 1) != 0 检查当前这个j左右是否有相邻的1,即..相邻，不合法
+                if ((rowMask[i] & j) != j || (j & (j >> 1)) != 0) continue;
+                
+                if (i == 0) {
+                    dp[i][j] = Integer.bitCount(j);
+                } else {
+                    //枚举所有k，看k是否是能对当前行j有效的状态，即左前方和右前方不能是1
+                    //如果k对于当前是合法的，dp[j]就可以从dp[i-1][k]转移过来
+                    //dp[i-1][k] != -1是一个剪枝，如果k本身是不合法的，比如k是有连续的1出现，那么dp[i-1][k]== -1,这时候不进行计算
+                    for (int k = 0; k < state; k++) {
+                        if ((j & (k >> 1)) == 0 && (k & (j >> 1)) == 0 && dp[i-1][k] != -1) {
+                            dp[i][j] = Math.max(dp[i][j], Integer.bitCount(j) + dp[i-1][k]);
+                        }
+                    }
+                }
+                
+                //当前行i的最大值不一定出现在什么状态，所以要对所有的j取一个最大值
+                res = Math.max(res, dp[i][j]);
+            }
+        }
+        
+        return res;
+    }
+}
+```
+
+
+
+#### 1406. Stone Game III
+
+```java
+public class LC1406 {
+    public String stoneGameIII(int[] stoneValue) {
+        int[] memo = new int[stoneValue.length];
+        Arrays.fill(memo, Integer.MIN_VALUE);
+        int score = dfs(stoneValue, 0, memo);
+        
+        return score > 0 ? "Alice" : score == 0 ? "Tie" : "Bob";
+    }
+    
+    /**
+     * 这种两人下棋的问题不需要考虑当前是谁在走，只需要看当前走这一步能获得relative score是多少即可
+     */
+    private int dfs(int[] sv, int index, int[] memo) {
+        if (index == sv.length) return 0;
+        
+        if (memo[index] != Integer.MIN_VALUE) return memo[index];
+        
+        int sum = 0;
+        for (int i = 0; i <= 2 && index + i < sv.length; i++) {
+            sum += sv[index + i];
+            memo[index] = Math.max(memo[index], sum - dfs(sv, index + i + 1, memo));
+        }
+        
+        return memo[index];
+    }
+
+    public String stoneGameIII_DP(int[] stoneValue) {
+        int n = stoneValue.length;
+        int[] dp = new int[n + 1]; //需要多出来一个，当有人取最后一个的时候另一个人能取的就是0
+
+        for (int i = n - 1; i >= 0; i--) {
+            dp[i] = Integer.MIN_VALUE;
+            
+            for (int k = 0, sum = 0; k <= 2 && i + k < n; k++) {
+                sum += stoneValue[i + k];
+                dp[i] = Math.max(dp[i], sum - dp[i + k + 1]);
+            }
+        }
+        
+        return dp[0] > 0 ? "Alice" : dp[0] == 0 ? "Tie" : "Bob";
+    }
+}
+```
+
+
+
+#### 1416. Restore The Array
+
+```java
+class LC1416 {
+    public int numberOfArrays(String s, int k) {
+        int n = s.length();
+        long[] dp = new long[n + 1];
+        int mod = 1000000007;
+        
+        int len = Math.min(String.valueOf(k).length(), String.valueOf(Integer.MAX_VALUE).length());
+        
+        dp[0] = 1;
+        for (int i = 1; i <= n; i++) {
+            for (int j = i - 1; j >= 0 && i - j <= len; j--) {
+                if (s.charAt(j) == '0') continue;
+                long num = Long.parseLong(s.substring(j, i));
+                if (num >= 1 && num <= k) {
+                    dp[i] = (dp[i] + dp[j]) % mod;
+                }
+            }
+        }
+        
+        return (int) dp[n];
+    }
+
+    /**
+     * Time : n * logk
+     */
+    public int numberOfArrays_bottom_up(String s, int k) {
+        int n = s.length();
+        long[] dp = new long[n + 1];
+        int mod = 1000000007;
+        
+        dp[n] = 1;
+        for (int i = n - 1; i >= 0; i--) {
+            if (s.charAt(i) == '0') continue;
+            long num = 0;
+            //在[i, j]这个区间进行切分 因为j > i所以dp[j]已经计算过，再看substring(j~n)是否<=k
+            for (int j = i + 1; j <= n; j++) {
+                //这里因为每次乘以10然后与k比较，所以复杂度是log(10)K
+                num = num * 10 + s.charAt(j - 1) - '0';
+                if (num > k) break;
+                
+                dp[i] = (dp[i] + dp[j]) % mod;
+            }
+        }
+        
+        return (int) dp[0];
+    }
+}
+```
+
+
+
+#### 1419. Minimum Number of Frogs Croaking ★
+
+```java
+class LC1419 {
+    public int minNumberOfFrogs(String frogs) {
+        int n = frogs.length();
+        char[] ca = frogs.toCharArray();
+        int[] count = new int[5];
+        int max = 0, frog = 0;//表示同时在叫的青蛙的数量
+        
+        for (int i = 0; i < n; i++) {
+            char c = ca[i];
+            int index = "croak".indexOf(c);
+            //当前正在叫这个字母的青蛙个数增加1
+            count[index] += 1;
+            //'c'
+            if (index == 0) {
+                max = Math.max(max, ++frog);
+            } else {
+                //count[index - 1] == 0表示当前没有青蛙在叫之前那个字母，而直接叫了index这个字母
+                if (count[index - 1] == 0) {
+                    return -1;
+                }
+
+                count[index - 1] -= 1;
+                //每次叫到k的，同时在叫的青蛙数量-1
+                if (c == 'k') {
+                    frog -= 1;
+                }
+            }
+            
+        }
+        return frog == 0 ? max : -1;
+    }
+}
+```
+
+
+
+#### 1444. Number of Ways of Cutting a Pizza ★
+
+```java
+class LC1444 {
+    private static final int MOD = 1000000007;
+    public int ways(String[] pizza, int k) {
+        int m = pizza.length, n = pizza[0].length();
+        int[][] presum = new int[m+1][n+1];//presum[i][j]表示从(i,j)~(m-1,n-1)苹果的数量
+        int[][][] dp = new int[m][n][k];
+        
+        for (int i = m - 1; i >= 0; i--) {
+            for (int j = n - 1; j >= 0; j--) {
+                presum[i][j] = (pizza[i].charAt(j) == 'A' ? 1 : 0) + presum[i+1][j] + presum[i][j+1] - presum[i+1][j+1];
+            }
+        }
+        
+        return dfs(m, n, 0, 0, k - 1, presum, dp);
+    }
+    
+    /**
+     * r,c表示当前起始的行,列的index
+     * @param r
+     * @param c
+     */
+    private int dfs(int m, int n, int r, int c, int k, int[][] presum, int[][][] dp) {
+        if (presum[r][c] == 0) return 0;
+        if (k == 0) return 1;
+        
+        if (dp[r][c][k] != 0) return dp[r][c][k];
+        
+        long res = 0;
+        for (int i = 1; r + i < m; i++) {
+            int nr = r + i;
+            if (presum[r][c] - presum[nr][c] > 0) {
+                res = (res + dfs(m, n, nr, c, k - 1, presum, dp)) % MOD;
+            }
+        }
+        
+        for (int j = 1; c + j < n; j++) {
+            int nc = c + j;
+            if (presum[r][c] - presum[r][nc] > 0) {
+                res = (res + dfs(m, n, r, nc, k - 1, presum, dp)) % MOD;
+            }
+        }
+        
+        return dp[r][c][k] = (int) res;
+    }
+}
+```
+
+
 
 
 
@@ -7092,6 +8102,47 @@ class LC84 {
 
 
 
+#### 456. 132 Pattern
+
+```java
+class LC456 {
+    /**
+     * 先统计一下前i个元素的最小值
+     * 然后从数组最后面开始做递减栈，每当遇到一个比栈顶元素大的元素就试一下是否满足 左面最小值<栈顶元素<当前元素，但因为是递减栈，所以栈顶元素是当前元素右边最小的
+     * 所以如果不满足，就把该元素pop掉，再尝试更靠近尾部的较大的元素，如果如果以当前元素作为最大元素的话，后面没有能够满足条件第二大的元素了，所以就只能让当前元素尝试作为
+     * 第二大元素，放在栈顶，继续往左边找更大的
+     */
+    public boolean find132pattern(int[] nums) {
+        if (nums == null || nums.length == 0) return false;
+        int n = nums.length;
+        Stack<Integer> stack = new Stack<>();
+        
+        int[] min = new int[n];
+        min[0] = nums[0];
+        
+        for (int i = 1; i < n; i++) {
+            min[i] = Math.min(nums[i], min[i-1]);
+        }
+        
+        for (int i = n - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && nums[i] > nums[stack.peek()]) {
+                int k = stack.isEmpty() ? -1 : stack.peek();
+                
+                if (k != -1 && nums[k] > min[i]) {
+                    return true;
+                } else {
+                    stack.pop();
+                }
+            }
+            
+            stack.push(i);
+        }
+        
+        return false;
+    }
+}
+```
+
 
 
 #### 503. Next Greater Element II
@@ -7116,6 +8167,57 @@ class LC503 {
         }        
         
         return res;
+    }
+}
+```
+
+
+
+#### 907. Sum of Subarray Minimums
+
+```java
+class LC907 {
+    public int sumSubarrayMins(int[] A) {
+        if (A == null || A.length == 0) return 0;
+        
+        int n = A.length;
+        Stack<Integer> stack = new Stack<>();
+        stack.push(-1);
+        
+        long sum = 0;
+        int mod = 1000000007;
+        
+        /**
+         * 使用单调递增栈，可以找到右边第一个比自己小的新元素，同时也知道左边比自己小的元素，这样就知道了以栈顶元素作为subarray中最小元素的subarray的个数
+         */
+        for (int i = 0; i < A.length; i++) {
+            while (stack.peek() != -1 && A[stack.peek()] > A[i]) {
+                int curr = stack.pop();
+                int left = stack.peek();
+
+                /**
+                 * 这里的长度是i-curr而不是i-curr+1
+                 * index:0 1 2 3 4
+                 * Array:2 5 5 3 1
+                 * 当栈顶元素3遇到1的时候1比3小是不能取的，所以不能+1
+                 * 再一点是包含某个index的subarray个数是index左边元素个数(包含index元素本身) * index右边元素个数(也包含index本身)
+                 * 即左边元素作为起点的方法*右边元素作为重点的方法
+                 */
+                sum = (sum + (i - curr) * (curr - left) * A[curr]) % mod;
+            }
+            
+            stack.push(i);
+        }
+        
+        while (stack.peek() != -1) {
+            int right = n;
+            int index = stack.pop();
+            int left = stack.peek();
+            
+            sum = (sum + (right - index) * (index - left) * A[index]) % mod;
+        }
+        
+        return (int) sum;
     }
 }
 ```
@@ -7251,6 +8353,191 @@ class LC76 {
         }
         
         return minR == Integer.MAX_VALUE ? "" : s.substring(minL, minR);
+    }
+}
+```
+
+
+
+#### 209. Minimum Size Subarray Sum
+
+```java
+import java.util.*;
+public class LC209 {
+    public int minSubArrayLen(int s, int[] nums) {
+        if (nums == null || nums.length == 0) return 0;
+        int n  = nums.length;
+        int[] sums = new int[n + 1];
+        int res = n + 1;
+        
+        for (int i = 1; i <= n; i++) sums[i] = sums[i-1] + nums[i-1];
+        
+        Deque<Integer> q = new ArrayDeque<>();
+        
+        for (int i = 0; i <= n; i++) {
+            while (!q.isEmpty() && sums[i] - sums[q.peekFirst()] >= s) {
+                res = Math.min(res, i - q.pollFirst());
+            }
+            
+            while (!q.isEmpty() && sums[i] <= sums[q.peekLast()]) {
+                q.pollLast();
+            }
+            
+            q.offerLast(i);
+        }
+        
+        return res > n ? 0 : res;
+    }
+
+    public int minSubArrayLen_sliding_window(int s, int[] nums) {
+        if (nums == null || nums.length == 0) return 0;
+        int n  = nums.length;
+        int sum = 0;
+        int res = n + 1;
+        
+        int l = 0, r = 0;
+        
+        while (r < n) {
+            sum += nums[r++];
+            
+            while (sum >= s) {
+                res = Math.min(res, r - l);
+                sum -= nums[l++];
+            }
+        }
+        
+        return res > n ? 0 : res;
+    }
+
+    public int minSubArrayLen_binarySearch(int s, int[] nums) {
+        if (nums == null || nums.length == 0) return 0;
+        int n  = nums.length;
+        int[] sums = new int[n + 1];
+        int res = n + 1;
+        
+        for (int i = 1; i <= n; i++) sums[i] = sums[i-1] + nums[i-1];
+        
+        for (int i = 1; i <= n; i++) {
+            int index = binarySearch(sums, 0, i, sums[i], s);
+            if (index == -1) continue;
+            res = Math.min(i - index, res);
+        }
+        
+        return res > n ? 0 : res;
+    }
+    
+    private int binarySearch(int[] sums, int l, int r, int sum, int s) {
+        while (l < r) {
+            int m = l + (r - l) / 2 + 1;
+            
+            if (sum - sums[m] < s) {
+                r = m - 1;
+            } else {
+                l = m;
+            }
+        }
+        
+        return sum - sums[l] >= s ? l : -1;
+    }
+}
+```
+
+
+
+
+
+#### 239. Sliding Window Maximum
+
+```java
+class LC239 {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        int n = nums.length;
+        Deque<Integer> dq = new ArrayDeque<>();
+        int[] res = new int[n - k + 1];
+        
+        int index = 0;
+        
+        for (int i = 0; i < n; i++) {
+            if (!dq.isEmpty() && dq.peekFirst() < i - k + 1) {
+                dq.pollFirst();
+            }
+            
+            while (!dq.isEmpty() && nums[dq.peekLast()] < nums[i]) {
+                dq.pollLast();
+            }
+            
+            dq.offerLast(i);
+            
+            if (i >= k - 1) {
+                res[index++] = nums[dq.peekFirst()];
+            }
+        }
+        
+        return res;
+    }
+}
+```
+
+
+
+#### 1425. Constrained Subset Sum
+
+> *DP+Sliding Window*
+
+```java
+import java.util.*;
+class LC1425 {
+    /**
+     * dp[i]表示到达i这一点的最大和
+     * dp[i] = Math.max(dp[j], 0) + nums[i] (i-j<=k)
+     * Time O(n * k) TLE
+     */
+    public int constrainedSubsetSum(int[] nums, int k) {
+        int n = nums.length;
+        int[] dp = new int[n];
+        
+        Arrays.fill(dp, Integer.MIN_VALUE);
+        dp[0] = nums[0];
+        int max = Integer.MIN_VALUE;
+        
+        for (int i = 0; i < n; i++) {
+            for (int j = 1; j <= Math.min(i, k); j++) {
+                dp[i] = Math.max(Math.max(dp[i-j], 0) + nums[i], dp[i]);
+            }
+        
+            //最大值不一定出现在最后一个点
+            max = Math.max(dp[i], max);
+        }
+        
+        return max;
+    }
+
+    public int constrainedSubsetSum_mono_q(int[] nums, int k) {
+        int n = nums.length;
+        int[] dp = new int[n];
+        
+        Deque<Integer> q = new ArrayDeque<>();
+        int max = Integer.MIN_VALUE;
+        
+        for (int i = 0; i < n; i++) {
+            //当前sliding window的个数已经超过k个了，并且最大值是q的最前端的那个值，这个值就不能再用了，将其poll掉
+            if (i > k && !q.isEmpty() && q.peekFirst() == i - k - 1) {
+                q.pollFirst();
+            }
+
+            //dp[i]仍然表示nums[i]必须取能获得的sum的最大值，它等于q中的最大值(第一个) + nums[i]
+            dp[i] = (q.isEmpty() ? 0 : Math.max(dp[q.peekFirst()], 0)) + nums[i];
+            
+            //维护单调递减队列，小于dp[i]的值在[i-k,i]都不可能成为最大值，从q中移除
+            while (!q.isEmpty() && dp[i] > dp[q.peekLast()]) {
+                q.pollLast();
+            }
+            
+            q.offerLast(i);
+            max = Math.max(max, dp[i]);
+        }
+
+        return max;
     }
 }
 ```
@@ -7412,11 +8699,11 @@ class LC31 {
         	if (g(m)) {
               r = m; //新的搜索区间[l, m)
           } else {
-            	l = m + 1; //新的搜索区间[m+1, r)
+            	l = m + 1; //g(m)=false,解不在左区间以及m本身，新的搜索区间[m+1, r)
           }
       }
     
-    	return l; //l表示找到的第一个满足g(m) = true的值
+    	return l; //l表示找到的最小的l满足g(m) = true的值(最小的l使得移动r的那个function为true，因为移动的是r，r是开区间，但是l还是在这个区间内)
   }
   ```
 
@@ -7455,6 +8742,95 @@ class LC31 {
       }
   }
   ```
+
+
+
+- Template 2: 九章算法
+
+  > 找到第一个等于target的数的index
+
+  ```java
+  public int findFirst(int[] nums, int target) {
+    	int l = 0, r = nums.length - 1;
+    	while (l + 1 < r) { //避免死循环
+        	int mid = l + (r - l) / 2;
+        	if (nums[mid] < target) {
+            	l = mid;
+          } else {
+            	r = mid;//因为要找第一个，所以即使找到的时候也要移动右指针继续像左找
+          }
+      }
+    	
+    	if (nums[l] == target) return l;
+    	if (nums[r] = target) return r;
+    	return -1;
+  }
+  ```
+
+  
+
+- ***Find First***
+
+  找第一个的时候大于等于target的值的时候，**解区间在右侧**，当条件不满足的时候需要不断移动左指针l=m+1, 而找到一个满足条件的值的时候不确定是不是第一个，将右指针先放在这r=m,然后继续判断左侧有没有更小的满足F(m)的值
+
+- ***Find Last***
+
+  找最后一个大于等于target的时候，**解区间在左侧**，当找到一个满足F(m)的时候不确定是不是最后一个，所以把l移动过去l=m,而如果F(m)不成立，则移动r=m-1,注意这种情况下需要让m=(l+r+1)/2,即当l和r相差1的时候要让m=r, 否则l=m不动的时候会死循环
+
+- ***Questions***
+
+  *1283,1231,1011,875,774,410*
+
+#### 4. Median of Two Sorted Arrays
+
+```java
+/**
+ * 这道题的核心点是要找到一个点将nums1，nums2合并后的数组分开，并且满足
+ * 1.len(left_part) == len(right_part)
+ * 2.max(left_part) <= min(right_part)
+ * 所以就在nums1和nums2中总共找到k个元素使得k=(n1+n2+1)/2 并且
+ * 1.nums1[m1](1的分割点右边第一个元素 > nums2[m2-1](分割点左边的最后一个元素)
+ * 2.nums1[m1-1] < nums2[m2]
+ */
+class LC4 {
+    public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+        int n1 = nums1.length, n2 = nums2.length;
+        if (n1 > n2) return findMedianSortedArrays(nums2, nums1);
+        
+        int k = (n1 + n2 + 1) / 2;
+        int l = 0, r = n1;
+        
+        while (l < r) {
+            int m1 = l + (r - l) / 2;
+            int m2 = k - m1;
+            
+            if (nums1[m1] < nums2[m2 - 1]) {
+                //最小的l使得移动r的条件成立 即最小的l使得nums1[m1] >= nums2[m2 - 1]
+                l = m1 + 1;
+            } else {
+                r = m1;
+            }
+        }
+        
+        int m1 = l;
+        int m2 = k - l;
+        
+        //分割线左边最大值，之所以判断m1<=0是因为存在1中的元素太大，所以一个都不能取，前k个元素只能在nums2中取
+        int c1 = Math.max(m1 <= 0 ? Integer.MIN_VALUE : nums1[m1 - 1], m2 <= 0 ? Integer.MIN_VALUE : nums2[m2 - 1]);
+         
+        if ((n1 + n2) % 2 == 1) {
+            return c1;
+        }
+        
+        //分割线右边最小值
+        int c2 = Math.min(m1 >= n1 ? Integer.MAX_VALUE : nums1[m1], m2 >= n2 ? Integer.MAX_VALUE : nums2[m2]);
+        
+        return (c1 + c2) * 0.5;
+    }
+}
+```
+
+
 
 
 
@@ -7521,6 +8897,189 @@ public class Solution extends VersionControl {
     }
 }
 ```
+
+
+
+#### 774. Minimize Max Distance to Gas Station
+
+```java
+class LC774 {
+    public double minmaxGasDist(int[] stations, int K) {
+        int n = stations.length;
+        int t = n + K;
+        
+        double start = stations[0], end = stations[n-1];
+        
+        double lower = 0, upper = end - start;
+        double l = lower, r = upper;
+        
+        while (l + 1e-6 < r) {
+            double m = (r + l) / 2;
+            
+            int count = 0;
+            for (int i = 0; i < n - 1; i++) {
+                //计算一下在staions[i+1]~staions[i]这个区间内，如果以m为间隔的建立station的话可以建几个
+                //ceil是向上取整，(stations[i+1] - stations[i]) / m表示能分成几段，分割点的数量需要减1
+                count += Math.ceil((stations[i+1] - stations[i]) / m) - 1;
+            }
+            
+            if (count > K) {
+                l = m;
+            } else {
+                r = m;
+            }
+        }
+        
+        return l;
+    }
+}
+```
+
+
+
+
+
+#### 410. Split Array Largest Sum ★
+
+```java
+import java.util.*;
+class LC410 {
+    public int splitArray(int[] nums, int k) {
+        int n = nums.length;
+        //对分成的组的和进行二分，找一个值刚好能将nums以最大和为m一组，最终分成k组
+        int lower = Integer.MIN_VALUE;
+        long upper = 0;
+        for (int i = 0; i < n; i++) {
+            lower = Math.max(lower, nums[i]);
+            upper += nums[i];
+        }
+        
+        if (k == 1) return (int) upper;
+        
+        long l = lower, r = upper + 1;
+        while (l < r) {
+            long m = l + (r - l) / 2;
+            
+            //func是以和小于等于m的数分成一组需要的组数
+            if (func(nums, m) > k) {
+                l = m + 1;
+            } else {
+                r = m;
+            }
+        }
+        
+        return (int) l;
+    }
+    
+    // 7 2 5 10 8
+    // l = 10, r = 32 m = 21 (7 2 5) (10 8) 分成两组, 移动r=m, 继续找更小的m使得func(m) == k
+    // l = 10, r = 21 m = 15 (7 2 5) (10) (8) 分成三组了,说明m取小了,舍弃掉这个m, l = m + 1
+    // l = 16, r = 21 m = 18 (7 2 5) (10 8) 分成两组, 移动r=m, 继续找更小的m使得func(m) == k
+    // l = 16, r = 18 m = 17 (7 2 5) (10) (8) 分成三组了,说明m取小了,舍弃掉这个m, l = m + 1
+    // l = 18, r = 18 return l或r
+    
+    //1.当m满足func(m) <= k的时候，并没有停下来，而是继续移动r看是否存在更小的值使得func(m) <= k
+    //2.当找到一个最小的m，刚好使得func(m)是以和为m一组满足最终能分成k组的时候，这个时候r=m就不再动了
+    //3.如果此时l仍然不等于r的话，那么会继续寻找m, 但是这个m一定比第二步中确定的m值要小(因为m = (l+r)/2)，如果刚刚2中的m已经是满足能分成k组的最小值的m话，那么当前这个新的m一定不可能满足分成的组还等于k组，一定是大于k组的，所以此时移动l = m + 1, 只要不满足l==r，就会反复的移动l = m + 1,舍弃掉那些以m为和的组但是最终总数会大于k的m，最后达到l==r, 而r又是一组数的和使得刚好分成了k组，所以l和r一定在array的和中出现。
+    
+    private int func(int[] nums, long m) {
+        int k = 1, sum = 0;
+        for (int i = 0; i < nums.length; i++) {
+            sum += nums[i];
+            if (sum > m) {
+                sum = nums[i];
+                k++;
+            } 
+        }
+        
+        return k;
+    }
+
+    public int splitArray_dp(int[] nums, int m) {
+        int n = nums.length;
+        int[][] dp = new int[n+1][m+1];
+        
+        int[] sum = new int[n + 1];
+        
+        for (int i = 1; i <= n; i++) {
+            sum[i] = sum[i - 1] + nums[i - 1];
+        }
+        
+        for (int[] row : dp) Arrays.fill(row, Integer.MAX_VALUE);
+        
+        for (int i = 1; i <= n; i++) {
+            dp[i][1] = sum[i];
+        }
+        
+        for (int k = 2; k <= m; k++) {
+            for (int i = k; i <= n; i++) {
+                for (int j = k-1; j < i; j++) {
+                    dp[i][k] = Math.min(dp[i][k], Math.max(dp[j][k-1], sum[i] - sum[j]));
+                }
+            }
+        }
+        
+        return dp[n][m];
+    }
+}
+```
+
+
+
+#### 1231. Divide Chocolate ★
+
+> Similar question:  1011,875,774,410
+
+```java
+class LC1231 {
+    public int maximizeSweetness(int[] sweetness, int K) {
+        int n = sweetness.length;
+        long lower = 1, upper = 0;
+        long sum = 0;
+        
+        for (int i = 0; i < n; i++) {
+            sum += sweetness[i];
+        }
+        
+        upper = sum / (K + 1);
+        
+        //lower和upper是以某个值作为每一份的最小值进行切蛋糕，判断以该值为每一份的最小值是否能切成K+1份，如果不能说明最小值选大了
+        //如果能切成K+1份，保留该值，并判断是否有更大的值也可以切成K+1份，所以相当于找左边的最后一个满足条件的值，这个时候解空间在左边
+        //要移动右指针，舍弃掉右边不满足条件的值
+        long l = lower, r = upper;
+        while (l < r) {
+            //找最后一个值的时候m要取中点+1,相当于取的是right的值，比如l=6,r=7,如果(l+r)/2是等于left的，而(l+r)/2+1是等于right的
+            //如果这时候取left，那么left还保持不动，就会出现死循环
+            long m = l + (r - l) / 2 + 1;
+            
+            if (func(sweetness, m) < K + 1) {
+                r = m - 1;
+            } else {
+                l = m;
+            }
+        }
+        
+        return (int) l;
+    }
+    
+    private int func(int[] a, long m) {
+        int sum = 0, k = 0;
+        for (int i = 0; i < a.length; i++) {
+            sum += a[i];
+            if (sum >= m) {
+                sum = 0;
+                k += 1;
+            }
+        }
+        
+        return k;
+    }
+}
+```
+
+
+
+
 
 
 
@@ -7737,6 +9296,180 @@ class LC1249 {
         }
         
         return res.reverse().toString();
+    }
+}
+```
+
+
+
+
+
+### 19. Divide and Conquer
+
+#### 775. Global and Local Inversions
+
+```java
+public class LC775 {
+    /**
+     * A = {2,5,1,4,3,0} 先将A拆分成左右两部分
+     * left = {2,5,1} global = 2
+     * right = {4,3,0} glbal = 3
+     * 将左右进行排序变成{1,2,5}和{0,3,4}这时候再计算两边merge的global 右边0比左边1小 直接加上左边1以及后面的个数3个
+     */
+    public boolean isIdealPermutation(int[] A) {
+        if (A == null || A.length == 0) return true;
+        int n = A.length;
+        int[] temp = new int[n];
+        
+        int local = 0;
+        
+        for (int i = 0; i < n - 1; i++) {
+            if (A[i] > A[i + 1]) {
+                local += 1;
+            }
+        }
+        
+        int global = mergesort(A, 0, n - 1, temp);
+        
+        return local == global;
+    }
+    
+    private int mergesort(int[] A, int l, int r, int[] temp) {
+        if (l >= r) return 0;
+        
+        int m = l + (r - l) / 2;
+        
+        int inv = mergesort(A, l, m, temp) + mergesort(A, m + 1, r, temp);
+        int i = l, j = m + 1, k = 0;
+        
+        while (i <= m && j <= r) {
+            if (A[i] > A[j]) {
+                temp[k++] = A[j++];
+                inv += m - i + 1;
+            } else {
+                temp[k++] = A[i++];
+            }
+        }
+        
+        while (i <= m) temp[k++] = A[i++];
+        while (j <= r) temp[k++] = A[j++];
+        
+        int idx = 0;
+        while (idx < k) {
+            A[l++] = temp[idx++];
+        }
+        
+        return inv;
+    }
+
+    /**
+     * 因为数组是[0~n-1]的permutation，所以如果正常排序的话i == A[i]
+     * 如果存在一个元素使得Math.abs(A[i] - i) > 1的话，这个数就是一个global的而不是local的 比如[]0, 3, 2, 1] [3,1]是global而不是local的
+     */
+    public boolean isIdealPermutation_v2(int[] A) {
+        if (A == null || A.length == 0) return true;
+        int n = A.length;
+        int[] temp = new int[n];
+        
+        for (int i = 0; i < n; i++) {
+            if (Math.abs(A[i] - i) > 1) return false;
+        }
+        
+        return true;
+    }
+}
+```
+
+
+
+
+
+### 20.Deque
+
+> Similar questions: 1425 209 862 239
+
+#### 862. Shortest Subarray with Sum at Least K ★
+
+```java
+import java.util.*;
+class LC862 {
+    /**
+     * deque中维护递增栈
+     * A = [3,-1,2,5,6] K = 7
+     * presum [0,3,2,4,9,15]
+     *                 |
+     * 当i=9的时候循环去队列头部找满足sum[i]-sum[peekFirst]>=K的元素 
+     */
+    public int shortestSubarray(int[] A, int K) {
+        int n = A.length;
+        int[] presum = new int[n + 1];
+        Deque<Integer> dq = new ArrayDeque<>();
+        int res = n + 1;
+        
+        for (int i = 1; i <= n; i++) presum[i] = presum[i - 1] + A[i - 1];
+        
+        for (int i = 0; i < n + 1; i++) {
+            while (!dq.isEmpty() && presum[i] - presum[dq.peekFirst()] >= K) {
+                //一直找到长度最短的subarray满足sum>k
+                res = Math.min(res, i - dq.pollFirst());
+            }
+                
+            while (!dq.isEmpty() && presum[dq.peekLast()] >= presum[i]) {
+                dq.pollLast();
+            }
+            
+            dq.offerLast(i);
+        }
+        
+        
+        return res <= n ? res : -1;
+    }
+}
+```
+
+
+
+#### 1438. Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit ★
+
+```java
+public class LC1438 {
+    /**
+     * sliding window + 单调队列(维护当前范围内的最大值和最小值)
+     * 求当前范围内最小值，维护一个单调递增队列，每次遇到比队列尾小的元素就将队列尾poll掉，保证最小值在队头
+     * 当前范围内最大值，维护一个单调递减队列，每次遇到比队列尾大的元素就将队列尾poll掉，保证最大值在队头
+     */
+    public int longestSubarray(int[] nums, int limit) {
+        int len = 0;
+        int l = 0, r = 0;
+        Deque<Integer> maxQueue = new ArrayDeque<>(), minQueue = new ArrayDeque<>();
+        
+        while (r < nums.length) {
+            while (!maxQueue.isEmpty() && maxQueue.peekLast() < nums[r]) {
+                maxQueue.pollLast();
+            }
+            maxQueue.offerLast(nums[r]);
+            
+            while (!minQueue.isEmpty() && minQueue.peekLast() > nums[r]) {
+                minQueue.pollLast();
+            }
+            minQueue.offerLast(nums[r]);
+            
+            r += 1;
+
+            while (maxQueue.peekFirst() - minQueue.peekFirst() > limit) {
+                if (nums[l] == minQueue.peekFirst()) {
+                    minQueue.pollFirst();
+                } else if (nums[l] == maxQueue.peekFirst()) {
+                    maxQueue.pollFirst();
+                }
+                
+                l += 1;
+            }
+            
+            len = Math.max(len, r - l);
+        }
+        
+        return len;
     }
 }
 ```

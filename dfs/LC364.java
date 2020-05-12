@@ -26,7 +26,14 @@
  *     public List<NestedInteger> getList();
  * }
  */
-class Solution {
+import java.util.*;
+class LC364 {
+    interface NestedInteger {
+        boolean isInteger();
+        int getInteger();
+        List<NestedInteger> getList();
+    }
+    
     public int depthSumInverse(List<NestedInteger> nestedList) {
         int weighted = 0, unweighted = 0;
         

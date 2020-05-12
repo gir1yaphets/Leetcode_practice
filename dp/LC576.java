@@ -1,6 +1,4 @@
 class LC576 {
-    private int dir[] = {0, 1, 0, -1, 0};
-    
     public int findPaths(int m, int n, int N, int i, int j) {
         if (N <= 0) return 0;
         

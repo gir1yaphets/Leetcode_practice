@@ -1,6 +1,6 @@
 import java.util.*;
 
-class Solution {
+class LC542 {
     private int[][] dir =  {
         {1, 0},
         {-1, 0},

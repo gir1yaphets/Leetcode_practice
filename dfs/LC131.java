@@ -1,6 +1,6 @@
 import java.util.*;
 
-class Solution {
+class LC131 {
     private List<List<String>> res = new ArrayList<>();
     public List<List<String>> partition(String s) {
         //dfs

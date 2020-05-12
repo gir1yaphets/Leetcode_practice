@@ -1,4 +1,5 @@
-class Solution {
+import java.util.*;
+class LC301 {
     private List<String> res = new ArrayList<>();
     
     public List<String> removeInvalidParentheses(String s) {

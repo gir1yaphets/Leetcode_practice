@@ -1,4 +1,11 @@
-class Solution {
+import java.util.*;
+class LC339 {
+    interface NestedInteger {
+        boolean isInteger();
+        int getInteger();
+        List<NestedInteger> getList();
+    }
+
     private int sum = 0;
     
     public int depthSum(List<NestedInteger> nestedList) {

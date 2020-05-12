@@ -1,4 +1,5 @@
-class Solution {
+import java.util.*;
+class LC47 {
     private List<List<Integer>> res = new ArrayList<>();
     
     public List<List<Integer>> permuteUnique(int[] nums) {
